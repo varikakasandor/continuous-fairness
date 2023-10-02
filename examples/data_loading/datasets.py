@@ -45,7 +45,7 @@ def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack',
     # shuffle
     data = data.sample(frac=1, replace=False).reset_index(drop=True)
 
-    folds = data['fold'].astype(np.int)
+    folds = data['fold'].astype(int)
 
     y = data[label].values
     to_drop += [label]
