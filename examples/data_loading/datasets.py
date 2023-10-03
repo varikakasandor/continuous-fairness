@@ -16,7 +16,7 @@ def read_dataset(name, label=None, sensitive_attribute=None, fold=None):
         z_name = sensitive_attribute if sensitive_attribute is not None else 'racepctblack'
         fold_id = fold if fold is not None else 1
         return read_crimes(label=y_name, sensitive_attribute=z_name, fold=fold_id)
-    if name=='adult':
+    if name == 'adult':
         return load_adult()
     else:
         raise NotImplemented('Dataset {} does not exists'.format(name))
@@ -62,11 +62,7 @@ def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack',
     return x[folds != fold], y[folds != fold], z[folds != fold], x[folds == fold], y[folds == fold], z[folds == fold]
 
 
-
-
-
-
-#This function is a minor modification from https://github.com/jmikko/fair_ERM
+# This function is a minor modification from https://github.com/jmikko/fair_ERM
 def load_adult(nTrain=None, scaler=True, shuffle=False):
     if shuffle:
         print('Warning: I wont shuffle because adult has fixed test set')
@@ -110,7 +106,7 @@ def load_adult(nTrain=None, scaler=True, shuffle=False):
             "Age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
             "occupation", "relationship", "race", "gender", "capital gain", "capital loss",
             "hours per week", "native-country", "income"]
-            )
+    )
     len_train = len(data.values[:, -1])
     data_test = pd.read_csv(
         "adult.test",
@@ -139,8 +135,8 @@ def load_adult(nTrain=None, scaler=True, shuffle=False):
         b, c = np.unique(data[col], return_inverse=True)
         data[col] = c
     datamat = data.values
-    #Care there is a final dot in the class only in test set which creates 4 different classes
-    target = np.array([-1.0 if (val == 0 or val==1) else 1.0 for val in np.array(datamat)[:, -1]])
+    # Care there is a final dot in the class only in test set which creates 4 different classes
+    target = np.array([-1.0 if (val == 0 or val == 1) else 1.0 for val in np.array(datamat)[:, -1]])
     datamat = datamat[:, :-1]
     if scaler:
         scaler = StandardScaler()
@@ -152,12 +148,12 @@ def load_adult(nTrain=None, scaler=True, shuffle=False):
     data_test = namedtuple('_', 'data, target')(datamat[len_train:, :], target[len_train:])
 
     encoded_data = pd.DataFrame(data.data)
-    encoded_data['Target'] = (data.target+1)/2
-    to_protect = 1. * (data.data[:,9]!=data.data[:,9][0])
+    encoded_data['Target'] = (data.target + 1) / 2
+    to_protect = 1. * (data.data[:, 9] != data.data[:, 9][0])
 
     encoded_data_test = pd.DataFrame(data_test.data)
-    encoded_data_test['Target'] = (data_test.target+1)/2
-    to_protect_test = 1. * (data_test.data[:,9]!=data_test.data[:,9][0])
+    encoded_data_test['Target'] = (data_test.target + 1) / 2
+    to_protect_test = 1. * (data_test.data[:, 9] != data_test.data[:, 9][0])
 
-    #Variable to protect (9:Sex) is removed from dataset
+    # Variable to protect (9:Sex) is removed from dataset
     return encoded_data.drop(columns=9), to_protect, encoded_data_test.drop(columns=9), to_protect_test
