@@ -19,7 +19,7 @@ if __name__ == "__main__":
     alpha_metric = generate_alpha(alpha_intervals, y_intervals)
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)"""
 
-    fairness_weights = np.logspace(np.log10(0.1), np.log10(10), 20)
+    fairness_weights = np.logspace(np.log10(2), np.log10(300), 20)
 
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", "Crime", fairness_weights,
                                                       analysis_metric)
