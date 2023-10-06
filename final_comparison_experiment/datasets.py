@@ -5,7 +5,9 @@ from collections import namedtuple
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from folktables import ACSDataSource, ACSEmployment
 
 dirname = os.path.dirname(__file__)
 
@@ -16,11 +18,22 @@ def read_dataset(name, label=None, sensitive_attribute=None, fold=None):
         z_name = sensitive_attribute if sensitive_attribute is not None else 'racepctblack'
         fold_id = fold if fold is not None else 1
         return read_crimes(label=y_name, sensitive_attribute=z_name, fold=fold_id)
-    if name == 'adult':
-        return load_adult()
+    elif name == 'adult':
+        return read_adult()
+    elif name == "uscensus":
+        return read_uscensus()
     else:
         raise NotImplemented('Dataset {} does not exists'.format(name))
 
+
+def read_uscensus():
+    data_source = ACSDataSource(survey_year='2018', horizon='1-Year', survey='person')
+    acs_data = data_source.get_data(states=["AL"], download=True)
+    features, label, group = ACSEmployment.df_to_numpy(acs_data)
+    group = group.astype(float)
+    group /= np.max(group)
+    x_train, x_test, y_train, y_test, a_train, a_test = train_test_split(features, label, group, test_size=0.2, random_state=42)
+    return x_train, y_train, a_train, x_test, y_test, a_test
 
 def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack', fold=1):
     if not os.path.isfile('communities.data'):
@@ -63,7 +76,7 @@ def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack',
 
 
 # This function is a minor modification from https://github.com/jmikko/fair_ERM
-def load_adult(nTrain=None, scaler=True, shuffle=False):
+def read_adult(nTrain=None, scaler=True, shuffle=False):
     if shuffle:
         print('Warning: I wont shuffle because adult has fixed test set')
     '''
