@@ -1,3 +1,5 @@
+import numpy as np
+
 from pipeline import FairnessAwareLearningExperiment
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
@@ -17,12 +19,12 @@ if __name__ == "__main__":
     alpha_metric = generate_alpha(alpha_intervals, y_intervals)
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)"""
 
-    fairness_weights = [0.01, 0.1, 0.5, 1, 2, 10, 100]
+    fairness_weights = np.logspace(np.log10(0.1), np.log10(10), 20)
 
-    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta_trial", "Uscensus", fairness_weights,
+    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", "Crime", fairness_weights,
                                                       analysis_metric)
     beta_experiment.run_analysis()
 
-    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha_trial", "Uscensus", fairness_weights,
+    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha", "Crime", fairness_weights,
                                                        analysis_metric)
     alpha_experiment.run_analysis()

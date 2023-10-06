@@ -1,7 +1,3 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join('../..')))
 import torch
 from torch import nn
 import torch.utils.data as data_utils
@@ -21,7 +17,7 @@ class FairnessAwareLearningExperiment:
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=200):
+    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=100):
         X = torch.tensor(self.x_train.astype(np.float32))
         A = torch.tensor(self.a_train.astype(np.float32))
         Y = torch.tensor(self.y_train.astype(np.float32))
@@ -45,12 +41,12 @@ class FairnessAwareLearningExperiment:
 
                 optimizer.step(closure)
             if self.print_progress:
-                mse_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
-                mse_curr_train, nd_curr_train = self.evaluate(model, dataset="train")
+                bce_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
+                bce_curr_train, nd_curr_train = self.evaluate(model, dataset="train")
                 print(
-                    f"TEST -- mse: {mse_curr_test}, nd: {nd_curr_test}, combined: {mse_curr_test + fairness_weight * nd_curr_test}")
+                    f"TEST -- loss: {bce_curr_test}, nd: {nd_curr_test}, combined: {bce_curr_test + fairness_weight * nd_curr_test}")
                 print(
-                    f"TRAIN -- mse: {mse_curr_train}, nd: {nd_curr_train}, combined: {mse_curr_train + fairness_weight * nd_curr_train}")
+                    f"TRAIN -- loss: {bce_curr_train}, nd: {nd_curr_train}, combined: {bce_curr_train + fairness_weight * nd_curr_train}")
 
     def evaluate(self, model, dataset="test"):
         if dataset == "train":
@@ -60,7 +56,7 @@ class FairnessAwareLearningExperiment:
             X, A, Y = torch.tensor(self.x_test.astype(np.float32)), torch.Tensor(
                 self.a_test.astype(np.float32)), torch.tensor(self.y_test.astype(np.float32))
         prediction = model(X).detach().flatten()
-        loss = nn.MSELoss()(prediction, Y)
+        loss = nn.BCELoss()(prediction, Y)
         nd_loss = torch.max(self.fairness_metric(prediction, A, Y))
         return loss.item(), nd_loss
 
@@ -76,7 +72,7 @@ class FairnessAwareLearningExperiment:
             model = SimpleNN(self.x_train.shape[1], 1)
             self.train_model(model, fairness_weight=fairness_weight)
             prediction = model(X).detach().flatten()
-            loss = nn.MSELoss()(prediction, Y)
+            loss = nn.BCELoss()(prediction, Y)
             curr_fairness_losses, categories = self.analysis_metric(prediction, A, Y) # categories is the same for all iterations, should be restructured
             objective_losses.append(loss)
             nd_losses.append(curr_fairness_losses)
