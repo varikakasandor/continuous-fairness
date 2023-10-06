@@ -1,11 +1,11 @@
 import os
-import urllib
 import os.path
+import urllib
+from collections import namedtuple
+
 import numpy as np
 import pandas as pd
-import sklearn.preprocessing as preprocessing
 from sklearn.preprocessing import StandardScaler
-from collections import namedtuple
 
 dirname = os.path.dirname(__file__)
 

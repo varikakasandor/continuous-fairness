@@ -12,14 +12,15 @@ from models import SimpleNN
 
 
 class FairnessAwareLearningExperiment:
-    def __init__(self, data, fairness_metric, fairness_weights, analysis_metric, print_progress=True):
+    def __init__(self, data, fairness_metric, fairness_name, fairness_weights, analysis_metric, print_progress=True):
         self.x_train, self.y_train, self.a_train, self.x_test, self.y_test, self.a_test = data
         self.fairness_metric = fairness_metric
+        self.fairness_name = fairness_name
         self.fairness_weights = fairness_weights
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=50):
+    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=5):
         X = torch.tensor(self.x_train.astype(np.float32))
         A = torch.tensor(self.a_train.astype(np.float32))
         Y = torch.tensor(self.y_train.astype(np.float32))
@@ -67,6 +68,7 @@ class FairnessAwareLearningExperiment:
             self.a_test.astype(np.float32)), torch.tensor(self.y_test.astype(np.float32))
         objective_losses = []
         nd_losses = []
+        categories = None
         for fairness_weight in self.fairness_weights:
             if self.print_progress:
                 print(f"Fairness weight {fairness_weight} started")
@@ -74,7 +76,9 @@ class FairnessAwareLearningExperiment:
             self.train_model(model, fairness_weight=fairness_weight)
             prediction = model(X).detach().flatten()
             loss = nn.MSELoss()(prediction, Y)
-            curr_fairness_losses = self.analysis_metric(prediction, A, Y).tolist()
+            curr_fairness_losses, category_names = self.analysis_metric(prediction, A, Y)
+            if categories is None:
+                categories = category_names
             objective_losses.append(loss)
             nd_losses.append(curr_fairness_losses)
         objective_losses, nd_losses = np.array(objective_losses), np.array(nd_losses)
@@ -84,6 +88,8 @@ class FairnessAwareLearningExperiment:
             axes[i].scatter(nd_losses[:, i], objective_losses)
             axes[i].set_xlabel('Discrimimnatory loss')
             axes[i].set_ylabel('Objective loss')
+            axes[i].set_title(categories[i])
+        fig.suptitle(self.fairness_name)
         plt.tight_layout()
-        plt.savefig('analysis.pdf')
+        plt.savefig(f'analysis_{self.fairness_name}.pdf')
         plt.show()

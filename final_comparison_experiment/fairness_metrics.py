@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 
-def generate_alpha(constrained_intervals_A, quantizition_intervals_Y):
+def generate_alpha(constrained_intervals_A, quantizition_intervals_Y, return_category_names = False):
     def inside(num, endpoints):
         start, end = endpoints
         return start <= num < end
@@ -25,7 +25,14 @@ def generate_alpha(constrained_intervals_A, quantizition_intervals_Y):
                 if cnt_y_a > 0 and cnt_y > 0:
                     curr_nd_loss = torch.abs(sum_y_a_yhat / cnt_y_a - sum_y_yhat / cnt_y)
                     nd_losses.append(curr_nd_loss)
-        return torch.stack(nd_losses)
+        if return_category_names:
+            category_names = []
+            for inter_Y in quantizition_intervals_Y:
+                for inter_A in constrained_intervals_A:
+                    category_names.append(f"Y: {inter_Y}, A: {inter_A}")
+            return nd_losses, category_names
+        else:
+            return torch.stack(nd_losses)
 
     return fairness_metric
 
