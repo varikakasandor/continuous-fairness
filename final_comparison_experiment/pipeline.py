@@ -28,7 +28,7 @@ class FairnessAwareLearningExperiment:
         dataset = data_utils.TensorDataset(X, Y, A)
         dataset_loader = data_utils.DataLoader(dataset=dataset, batch_size=200, shuffle=True)
 
-        data_fitting_loss = nn.MSELoss()
+        data_fitting_loss = nn.BCELoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0.01)
 
         for j in range(num_epochs):
@@ -77,9 +77,7 @@ class FairnessAwareLearningExperiment:
             self.train_model(model, fairness_weight=fairness_weight)
             prediction = model(X).detach().flatten()
             loss = nn.MSELoss()(prediction, Y)
-            curr_fairness_losses, category_names = self.analysis_metric(prediction, A, Y)
-            if categories is None:
-                categories = category_names
+            curr_fairness_losses, categories = self.analysis_metric(prediction, A, Y) # categories is the same for all iterations, should be restructured
             objective_losses.append(loss)
             nd_losses.append(curr_fairness_losses)
         objective_losses, nd_losses = np.array(objective_losses), np.array(nd_losses)
@@ -89,7 +87,10 @@ class FairnessAwareLearningExperiment:
             axes[i].scatter(nd_losses[:, i], objective_losses)
             axes[i].set_xlabel('Discrimimnatory loss')
             axes[i].set_ylabel('Objective loss')
-            axes[i].set_title(categories[i])
+            (inter_Y_start, inter_Y_end), (inter_A_start, inter_A_end) = categories[i]
+            category_prob = ((Y >= inter_Y_start) & (Y < inter_Y_end) & (A >= inter_A_start) & (A < inter_A_end)) / len(Y)
+            category_desc = f"Y: ({inter_Y_start:.2f}, {inter_Y_end:.2f}), A: ({inter_A_start:.2f}, {inter_A_end:.2f}), P_ya: {category_prob:.2f}"
+            axes[i].set_title(category_desc)
         fig.suptitle(self.fairness_name)
         plt.tight_layout()
         plt.savefig(f'analysis_{self.fairness_name}_{self.dataset_name}.pdf')

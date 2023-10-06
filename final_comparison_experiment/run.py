@@ -2,7 +2,7 @@ from pipeline import FairnessAwareLearningExperiment
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
 
-if __name__=="__main__":
+if __name__ == "__main__":
     """dataset = read_dataset("crimes")
     num_constrained_intervals = 2
     intervals = generate_constrained_intervals(num_constrained_intervals)
@@ -19,8 +19,10 @@ if __name__=="__main__":
 
     fairness_weights = [0.01, 0.1, 0.5, 1, 2, 10, 100]
 
-    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", "Uscensus", fairness_weights, analysis_metric)
+    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", "Uscensus", fairness_weights,
+                                                      analysis_metric)
     beta_experiment.run_analysis()
 
-    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha", "Uscensus", fairness_weights, analysis_metric)
+    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha", "Uscensus", fairness_weights,
+                                                       analysis_metric)
     alpha_experiment.run_analysis()

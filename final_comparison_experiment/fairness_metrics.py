@@ -26,11 +26,11 @@ def generate_alpha(constrained_intervals_A, quantizition_intervals_Y, return_cat
                     curr_nd_loss = torch.abs(sum_y_a_yhat / cnt_y_a - sum_y_yhat / cnt_y)
                     nd_losses.append(curr_nd_loss)
         if return_category_names:
-            category_names = []
+            categories = []
             for inter_Y in quantizition_intervals_Y:
                 for inter_A in constrained_intervals_A:
-                    category_names.append(f"Y: {inter_Y}, A: {inter_A}")
-            return nd_losses, category_names
+                    categories.append((inter_Y, inter_A))
+            return nd_losses, categories
         else:
             return torch.stack(nd_losses)
 
