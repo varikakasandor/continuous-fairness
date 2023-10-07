@@ -102,5 +102,5 @@ class FairnessAwareLearningExperiment:
 
         fig.suptitle(self.fairness_name)
         plt.tight_layout()
-        plt.savefig(f'analysis_{self.fairness_name}_{self.dataset_name}.pdf')
+        plt.savefig(f'./plots/analysis_{self.fairness_name}_{self.dataset_name}.pdf')
         plt.show()
