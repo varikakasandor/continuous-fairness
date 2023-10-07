@@ -21,10 +21,10 @@ if __name__ == "__main__":
 
     fairness_weights = np.logspace(np.log10(2), np.log10(300), 20)
 
-    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", "Crime", fairness_weights,
+    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta_trial", "Crime", fairness_weights,
                                                       analysis_metric)
     beta_experiment.run_analysis()
 
-    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha", "Crime", fairness_weights,
+    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha_trial", "Crime", fairness_weights,
                                                        analysis_metric)
     alpha_experiment.run_analysis()

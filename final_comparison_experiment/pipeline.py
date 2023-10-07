@@ -8,7 +8,8 @@ from models import SimpleNN
 
 
 class FairnessAwareLearningExperiment:
-    def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric, print_progress=True):
+    def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric,
+                 print_progress=True):
         self.x_train, self.y_train, self.a_train, self.x_test, self.y_test, self.a_test = data
         self.fairness_metric = fairness_metric
         self.fairness_name = fairness_name
@@ -17,7 +18,7 @@ class FairnessAwareLearningExperiment:
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=100):
+    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=200):
         X = torch.tensor(self.x_train.astype(np.float32))
         A = torch.tensor(self.a_train.astype(np.float32))
         Y = torch.tensor(self.y_train.astype(np.float32))
@@ -66,6 +67,7 @@ class FairnessAwareLearningExperiment:
         objective_losses = []
         nd_losses = []
         categories = None
+        bottlenecks = []
         for fairness_weight in self.fairness_weights:
             if self.print_progress:
                 print(f"Fairness weight {fairness_weight} started")
@@ -73,18 +75,22 @@ class FairnessAwareLearningExperiment:
             self.train_model(model, fairness_weight=fairness_weight)
             prediction = model(X).detach().flatten()
             loss = nn.BCELoss()(prediction, Y)
-            curr_fairness_losses, categories = self.analysis_metric(prediction, A, Y) # categories is the same for all iterations, should be restructured
+            curr_fairness_losses, categories = self.analysis_metric(prediction, A, Y)  # categories is the same for all iterations, should be restructured
+            curr_bottleneck = ["green"] * len(curr_fairness_losses)
+            curr_bottleneck[curr_fairness_losses.index(max(curr_fairness_losses))] = "red"
+            bottlenecks.append(curr_bottleneck)
             objective_losses.append(loss)
             nd_losses.append(curr_fairness_losses)
         objective_losses, nd_losses = np.array(objective_losses), np.array(nd_losses)
         num_categories = nd_losses.shape[1]
         fig, axes = plt.subplots(1, num_categories, figsize=(16, 4))
         for i in range(num_categories):
-            axes[i].scatter(nd_losses[:, i], objective_losses)
+            axes[i].scatter(nd_losses[:, i], objective_losses, c=[l[i] for l in bottlenecks])
             axes[i].set_xlabel('Discrimimnatory loss')
             axes[i].set_ylabel('Objective loss')
             (inter_Y_start, inter_Y_end), (inter_A_start, inter_A_end) = categories[i]
-            category_prob = ((Y >= inter_Y_start) & (Y < inter_Y_end) & (A >= inter_A_start) & (A < inter_A_end)).sum() / len(Y)
+            category_prob = ((Y >= inter_Y_start) & (Y < inter_Y_end) & (A >= inter_A_start) & (
+                        A < inter_A_end)).sum() / len(Y)
             category_desc = f"Y: ({inter_Y_start:.2f} - {inter_Y_end:.2f}), A: ({inter_A_start:.2f} - {inter_A_end:.2f}), P_ya: {category_prob:.2f}"
             axes[i].set_title(category_desc)
         fig.suptitle(self.fairness_name)
