@@ -1,0 +1,12 @@
+# Default ignored files
+/shelf/
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+*.xml
+*.csv
+*.iml
+*.data
+*.names
+*.zip
