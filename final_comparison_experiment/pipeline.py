@@ -18,7 +18,7 @@ class FairnessAwareLearningExperiment:
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=200):
+    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=100):
         X = torch.tensor(self.x_train.astype(np.float32))
         A = torch.tensor(self.a_train.astype(np.float32))
         Y = torch.tensor(self.y_train.astype(np.float32))
@@ -92,7 +92,7 @@ class FairnessAwareLearningExperiment:
             category_prob = ((Y >= inter_Y_start) & (Y < inter_Y_end) & (A >= inter_A_start) & (
                         A < inter_A_end)).sum() / len(Y)
             category_desc = f"Y: ({inter_Y_start:.2f} - {inter_Y_end:.2f}), A: ({inter_A_start:.2f} - {inter_A_end:.2f}), P_ya: {category_prob:.2f}"
-            axes[i].set_title(category_desc)
+            axes[i].set_title(category_desc, fontsize="xx-small")
         fig.suptitle(self.fairness_name)
         plt.tight_layout()
         plt.savefig(f'analysis_{self.fairness_name}_{self.dataset_name}.pdf')
