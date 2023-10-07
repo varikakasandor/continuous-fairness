@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug run",
+            "type": "python",
+            "request": "launch",
+            "program": "final_comparison_experiment/run.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug run_syntetic",
+            "type": "python",
+            "request": "launch",
+            "program": "final_comparison_experiment/run_syntetic.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
