@@ -9,4 +9,5 @@
 *.iml
 *.data
 *.names
+*.test
 *.zip

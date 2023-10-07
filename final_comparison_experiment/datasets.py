@@ -36,22 +36,22 @@ def read_uscensus():
     return x_train, y_train, a_train, x_test, y_test, a_test
 
 def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack', fold=1):
-    if not os.path.isfile('communities.data'):
+    if not os.path.isfile('./data/communities.data'):
         urllib.request.urlretrieve(
-            "http://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data", "communities.data")
+            "http://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data", "./data/communities.data")
         urllib.request.urlretrieve(
             "http://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.names",
-            "communities.names")
+            "./data/communities.names")
 
     # create names
     names = []
-    with open('communities.names', 'r') as file:
+    with open('./data/communities.names', 'r') as file:
         for line in file:
             if line.startswith('@attribute'):
                 names.append(line.split(' ')[1])
 
     # load data
-    data = pd.read_csv('communities.data', names=names, na_values=['?'])
+    data = pd.read_csv('./data/communities.data', names=names, na_values=['?'])
 
     to_drop = ['state', 'county', 'community', 'fold', 'communityname']
     data.fillna(0, inplace=True)
@@ -108,13 +108,13 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
     Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands.
     (14. label: <=50K, >50K)
     '''
-    if not os.path.isfile('adult.data'):
+    if not os.path.isfile('./data/adult.data'):
         urllib.request.urlretrieve(
-            "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data", "adult.data")
+            "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data", "./data/adult.data")
         urllib.request.urlretrieve(
-            "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test", "adult.test")
+            "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test", "./data/adult.test")
     data = pd.read_csv(
-        "adult.data",
+        "./data/adult.data",
         names=[
             "Age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
             "occupation", "relationship", "race", "gender", "capital gain", "capital loss",
@@ -122,7 +122,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
     )
     len_train = len(data.values[:, -1])
     data_test = pd.read_csv(
-        "adult.test",
+        "./data/adult.test",
         names=[
             "Age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
             "occupation", "relationship", "race", "gender", "capital gain", "capital loss",
@@ -157,16 +157,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
         datamat = scaler.transform(datamat)
     if nTrain is None:
         nTrain = len_train
-    data = namedtuple('_', 'data, target')(datamat[:nTrain, :], target[:nTrain])
-    data_test = namedtuple('_', 'data, target')(datamat[len_train:, :], target[len_train:])
-
-    encoded_data = pd.DataFrame(data.data)
-    encoded_data['Target'] = (data.target + 1) / 2
-    to_protect = 1. * (data.data[:, 9] != data.data[:, 9][0])
-
-    encoded_data_test = pd.DataFrame(data_test.data)
-    encoded_data_test['Target'] = (data_test.target + 1) / 2
-    to_protect_test = 1. * (data_test.data[:, 9] != data_test.data[:, 9][0])
-
-    # Variable to protect (9:Sex) is removed from dataset
-    return encoded_data.drop(columns=9), to_protect, encoded_data_test.drop(columns=9), to_protect_test
+    target = (target + 1) / 2
+    to_protect = 1. * (datamat[:, 9] != datamat[:, 9][0])
+    data = np.delete(datamat, 9, axis=1)  # TODO: discuss if A should be dropped from X or not
+    return data[:nTrain, :], target[:nTrain], to_protect[:nTrain], data[nTrain:, :], target[nTrain:], to_protect[nTrain:]
