@@ -82,17 +82,24 @@ class FairnessAwareLearningExperiment:
             objective_losses.append(loss)
             nd_losses.append(curr_fairness_losses)
         objective_losses, nd_losses = np.array(objective_losses), np.array(nd_losses)
+
         num_categories = nd_losses.shape[1]
-        fig, axes = plt.subplots(1, num_categories, figsize=(16, 4))
+        plot_dim_1, plot_dim_2 = int(np.floor(np.sqrt(num_categories))), 1
+        while num_categories % plot_dim_1 != 0:
+            plot_dim_1 -= 1
+        plot_dim_2 = num_categories // plot_dim_1
+        fig, axes = plt.subplots(plot_dim_2, plot_dim_2, figsize=(plot_dim_1 * 4, plot_dim_2 * 4))
+
         for i in range(num_categories):
-            axes[i].scatter(nd_losses[:, i], objective_losses, c=[l[i] for l in bottlenecks])
-            axes[i].set_xlabel('Discrimimnatory loss')
-            axes[i].set_ylabel('Objective loss')
-            (inter_Y_start, inter_Y_end), (inter_A_start, inter_A_end) = categories[i]
-            category_prob = ((Y >= inter_Y_start) & (Y < inter_Y_end) & (A >= inter_A_start) & (
-                        A < inter_A_end)).sum() / len(Y)
-            category_desc = f"Y: ({inter_Y_start:.2f} - {inter_Y_end:.2f}), A: ({inter_A_start:.2f} - {inter_A_end:.2f}), P_ya: {category_prob:.2f}"
-            axes[i].set_title(category_desc, fontsize="xx-small")
+            idx, idy = i // plot_dim_1, i % plot_dim_1
+            axes[idx, idy].scatter(nd_losses[:, i], objective_losses, c=[l[i] for l in bottlenecks])
+            axes[idx, idy].set_xlabel('Discrimimnatory loss')
+            axes[idx, idy].set_ylabel('Objective loss')
+            (Y_start, Y_end), (A_start, A_end) = categories[i]
+            category_prob = ((Y_start < Y) & (Y <= Y_end) & (A_start < A) & (A <= A_end)).sum() / len(Y)
+            category_desc = f"Y: ({Y_start:.3f} - {Y_end:.3f}), A: ({A_start:.3f} - {A_end:.3f}), P_ya: {category_prob:.3f}"
+            axes[idx, idy].set_title(category_desc, fontsize="xx-small")
+
         fig.suptitle(self.fairness_name)
         plt.tight_layout()
         plt.savefig(f'analysis_{self.fairness_name}_{self.dataset_name}.pdf')
