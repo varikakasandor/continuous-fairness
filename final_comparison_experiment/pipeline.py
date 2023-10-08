@@ -9,7 +9,7 @@ from models import SimpleNN
 
 class FairnessAwareLearningExperiment:
     def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric,
-                 print_progress=True):
+                 num_epochs=100, print_progress=True):
         self.x_train, self.y_train, self.a_train, self.x_test, self.y_test, self.a_test = data
         self.fairness_metric = fairness_metric
         self.fairness_name = fairness_name
@@ -17,8 +17,10 @@ class FairnessAwareLearningExperiment:
         self.fairness_weights = fairness_weights
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
+        self.num_epochs = num_epochs
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=100):
+    def train_model(self, model, fairness_weight=1.0, lr=1e-5):
+        num_epochs = self.num_epochs
         X = torch.tensor(self.x_train.astype(np.float32))
         A = torch.tensor(self.a_train.astype(np.float32))
         Y = torch.tensor(self.y_train.astype(np.float32))
