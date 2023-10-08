@@ -6,7 +6,7 @@ from syntetic_datasets import read_syntetic
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
 
 if __name__ == "__main__":
-    dataset_name = "uscensus"
+    dataset_name = "adult"
 
     if dataset_name == "crimes":
         dataset = read_dataset(dataset_name)
