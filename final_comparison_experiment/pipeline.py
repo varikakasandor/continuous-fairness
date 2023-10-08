@@ -18,7 +18,7 @@ class FairnessAwareLearningExperiment:
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=10):
+    def train_model(self, model, fairness_weight=1.0, lr=1e-5, num_epochs=100):
         X = torch.tensor(self.x_train.astype(np.float32))
         A = torch.tensor(self.a_train.astype(np.float32))
         Y = torch.tensor(self.y_train.astype(np.float32))
