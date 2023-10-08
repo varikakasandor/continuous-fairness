@@ -44,7 +44,7 @@ if __name__ == "__main__":
         analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
         num_epochs = 10
 
-    fairness_weights_beta = fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(30), 30)  # TODO: set it based on eta
+    fairness_weights_beta = fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), 30)  # TODO: set it based on eta
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", dataset_name, fairness_weights_beta,
                                                       analysis_metric, num_epochs)
     beta_experiment.run_analysis()
