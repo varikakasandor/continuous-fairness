@@ -6,7 +6,7 @@ from syntetic_datasets import read_syntetic
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
 
 if __name__ == "__main__":
-    dataset_name = "adult"
+    dataset_name = "syntetic"
 
     if dataset_name == "crimes":
         dataset = read_dataset(dataset_name)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         beta_metric = generate_beta(alpha_intervals, y_intervals)
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
         analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
-        num_epochs = 10
+        num_epochs = 100
 
     fairness_weights_beta = fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(30), 30)  # TODO: set it based on eta
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta", dataset_name, fairness_weights_beta,
