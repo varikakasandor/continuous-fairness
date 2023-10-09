@@ -1,11 +1,15 @@
-import torch
-from torch import nn
-import torch.utils.data as data_utils
-import numpy as np
+import os
+import sys
+
 import matplotlib.pyplot as plt
+import torch
+import torch.utils.data as data_utils
+from torch import nn
 
 from models import SimpleNN
 
+sys.path.append(os.path.abspath(os.path.join('./..')))
+from tools import *
 
 class FairnessAwareLearningExperiment:
     def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric,
@@ -84,11 +88,8 @@ class FairnessAwareLearningExperiment:
         objective_losses_train, objective_losses_test, nd_losses_train, nd_losses_test = np.array(objective_losses_train), np.array(objective_losses_test), np.array(nd_losses_train), np.array(nd_losses_test)
 
         num_categories = len(categories)
-        plot_dim_1, plot_dim_2 = int(np.floor(np.sqrt(num_categories))), 1
-        while num_categories % plot_dim_1 != 0:
-            plot_dim_1 -= 1
-        plot_dim_2 = num_categories // plot_dim_1
-        fig, axes = plt.subplots(plot_dim_2, plot_dim_2, figsize=(plot_dim_1 * 4, plot_dim_2 * 4))
+        plot_dim_1, plot_dim_2 = find_optimal_subplot_dims(num_categories)
+        fig, axes = plt.subplots(plot_dim_1, plot_dim_2, figsize=(plot_dim_1 * 4, plot_dim_2 * 4))
 
         for i in range(num_categories):
             idx, idy = i // plot_dim_1, i % plot_dim_1
@@ -109,3 +110,4 @@ class FairnessAwareLearningExperiment:
         plt.tight_layout()
         plt.savefig(f'./plots/analysis_{self.fairness_name}_{self.dataset_name}.pdf')
         plt.show()
+        return ExperimentResults(self.y_train, self.a_train, self.y_test, self.a_test, categories, objective_losses_train, nd_losses_train, bottlenecks_train, objective_losses_test, nd_losses_test, bottlenecks_test, self.fairness_name, self.dataset_name)
