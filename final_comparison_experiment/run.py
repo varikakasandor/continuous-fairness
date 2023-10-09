@@ -58,13 +58,13 @@ def load_results(real_run):
     return alpha_results, beta_results
 
 if __name__ == "__main__":
-    dataset_name = "adult"
-    real_run = False
+    dataset_name = "synthetic"
+    real_run = True
     create_comparison = True
-    load_existing_result = True
+    load_existing_result = False
 
     if not load_existing_result:
-        alpha_results, beta_results = running_experiments(real_run)
+        alpha_results, beta_results = running_experiments(dataset_name, real_run)
     else:
         alpha_results, beta_results = load_results(real_run)
 
