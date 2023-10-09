@@ -1,15 +1,12 @@
 from matplotlib import pyplot as plt
+import joblib
 
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
 from pipeline import FairnessAwareLearningExperiment
 from tools import *
 
-if __name__ == "__main__":
-    dataset_name = "adult"
-    real_run = False
-    create_comparison = True
-
+def running_experiments(dataset_name, real_run):
     if dataset_name == "crimes":
         intervals = generate_constrained_intervals(2)
         beta_metric = generate_beta(intervals, intervals)
@@ -39,14 +36,38 @@ if __name__ == "__main__":
     num_fairness_weights = 30 if real_run else 3
 
     fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
-    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, "Beta" if real_run else "Beta_trial", dataset_name, fairness_weights_beta,
+    fairness_name = "Beta" if real_run else "Beta_trial"
+    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, fairness_name, dataset_name, fairness_weights_beta,
                                                       analysis_metric, num_epochs)
     beta_results = beta_experiment.run_analysis()
+    joblib.dump(beta_results, f'results/analysis_{fairness_name}_{dataset_name}.joblib')
 
     fairness_weights_alpha = np.logspace(np.log10(0.02), np.log10(6), num_fairness_weights)
-    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, "Alpha" if real_run else "Alpha_trial", dataset_name,
+    fairness_name = "Alpha" if real_run else "Alpha_trial"
+    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, fairness_name, dataset_name,
                                                        fairness_weights_alpha, analysis_metric, num_epochs)
     alpha_results = alpha_experiment.run_analysis()
+    joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{dataset_name}.joblib')
+    return alpha_results, beta_results
+
+def load_results(real_run):
+    fairness_name = "Beta" if real_run else "Beta_trial"
+    beta_results = joblib.load(f'results/analysis_{fairness_name}_{dataset_name}.joblib')
+    fairness_name = "Alpha" if real_run else "Alpha_trial"
+    alpha_results = joblib.load(f'results/analysis_{fairness_name}_{dataset_name}.joblib')
+    return alpha_results, beta_results
+
+if __name__ == "__main__":
+    dataset_name = "adult"
+    real_run = False
+    create_comparison = True
+    load_existing_result = True
+
+    if not load_existing_result:
+        alpha_results, beta_results = running_experiments(real_run)
+    else:
+        alpha_results, beta_results = load_results(real_run)
+
 
     if create_comparison:
         num_categories = len(beta_results.categories)
