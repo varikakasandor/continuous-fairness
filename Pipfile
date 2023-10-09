@@ -10,6 +10,7 @@ pandas = "*"
 scikit-learn = "*"
 folktables = "*"
 matplotlib = "*"
+joblib = "*"
 
 [dev-packages]
 
