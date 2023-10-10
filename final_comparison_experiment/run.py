@@ -32,8 +32,8 @@ def running_experiments(dataset_name, real_run):
 
     dataset = read_dataset(dataset_name)
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
-    num_epochs = 100 if real_run else 1
-    num_fairness_weights = 30 if real_run else 3
+    num_epochs = 200 if real_run else 1
+    num_fairness_weights = 50 if real_run else 3
 
     fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
     fairness_name = "Beta" if real_run else "Beta_trial"
@@ -51,14 +51,14 @@ def running_experiments(dataset_name, real_run):
     return alpha_results, beta_results
 
 def load_results(real_run):
-    fairness_name = "Beta" if real_run else "Beta_trial"
+    fairness_name = "Beta_200" if real_run else "Beta_trial"
     beta_results = joblib.load(f'results/analysis_{fairness_name}_{dataset_name}.joblib')
-    fairness_name = "Alpha" if real_run else "Alpha_trial"
+    fairness_name = "Alpha_200" if real_run else "Alpha_trial"
     alpha_results = joblib.load(f'results/analysis_{fairness_name}_{dataset_name}.joblib')
     return alpha_results, beta_results
 
 if __name__ == "__main__":
-    dataset_name = "synthetic"
+    dataset_name = "adult"
     real_run = True
     create_comparison = True
     load_existing_result = False
