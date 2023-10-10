@@ -1,6 +1,6 @@
-import json
-import numpy as np
 from collections import namedtuple
+
+import numpy as np
 
 ExperimentResults = namedtuple('ExperimentResults',
                          ['y_train', 'a_train', 'y_test', 'a_test', 'categories', 'obj_loss_train', 'nd_loss_train',

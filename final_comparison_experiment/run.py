@@ -4,7 +4,8 @@ import joblib
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
 from pipeline import FairnessAwareLearningExperiment
-from tools import *
+from final_comparison_experiment.tools import *
+
 
 def running_experiments(dataset_name, real_run):
     if dataset_name == "crimes":
@@ -37,7 +38,8 @@ def running_experiments(dataset_name, real_run):
 
     fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
     fairness_name = "Beta" if real_run else "Beta_trial"
-    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, fairness_name, dataset_name, fairness_weights_beta,
+    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, fairness_name, dataset_name,
+                                                      fairness_weights_beta,
                                                       analysis_metric, num_epochs)
     beta_results = beta_experiment.run_analysis()
     joblib.dump(beta_results, f'results/analysis_{fairness_name}_{dataset_name}.joblib')
@@ -50,6 +52,7 @@ def running_experiments(dataset_name, real_run):
     joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{dataset_name}.joblib')
     return alpha_results, beta_results
 
+
 def load_results(real_run):
     fairness_name = "Beta_200" if real_run else "Beta_trial"
     beta_results = joblib.load(f'results/analysis_{fairness_name}_{dataset_name}.joblib')
@@ -57,9 +60,10 @@ def load_results(real_run):
     alpha_results = joblib.load(f'results/analysis_{fairness_name}_{dataset_name}.joblib')
     return alpha_results, beta_results
 
+
 if __name__ == "__main__":
     dataset_name = "adult"
-    real_run = True
+    real_run = False
     create_comparison = True
     load_existing_result = False
 
@@ -67,7 +71,6 @@ if __name__ == "__main__":
         alpha_results, beta_results = running_experiments(dataset_name, real_run)
     else:
         alpha_results, beta_results = load_results(real_run)
-
 
     if create_comparison:
         num_categories = len(beta_results.categories)
@@ -77,25 +80,34 @@ if __name__ == "__main__":
         for i in range(num_categories):
             idx, idy = i // plot_dim_1, i % plot_dim_1
             scatter_beta_train = axes[idx, idy].scatter(beta_results.nd_loss_train[:, i], beta_results.obj_loss_train,
-                                                   c=[l[i] for l in beta_results.bottlenecks_train], label='beta_train', marker='x')
-            scatter_alpha_train = axes[idx, idy].scatter(alpha_results.nd_loss_train[:, i], alpha_results.obj_loss_train,
-                                                   c=[l[i] for l in alpha_results.bottlenecks_train], label='alpha_train', marker='v')
+                                                        c=[l[i] for l in beta_results.bottlenecks_train],
+                                                        label='beta_train', marker='x')
+            scatter_alpha_train = axes[idx, idy].scatter(alpha_results.nd_loss_train[:, i],
+                                                         alpha_results.obj_loss_train,
+                                                         c=[l[i] for l in alpha_results.bottlenecks_train],
+                                                         label='alpha_train', marker='v')
             scatter_beta_test = axes[idx, idy].scatter(beta_results.nd_loss_test[:, i], beta_results.obj_loss_test,
-                                                   c=[l[i] for l in beta_results.bottlenecks_test], label='beta_test', marker='x')
+                                                       c=[l[i] for l in beta_results.bottlenecks_test],
+                                                       label='beta_test', marker='x')
             scatter_alpha_test = axes[idx, idy].scatter(alpha_results.nd_loss_test[:, i], alpha_results.obj_loss_test,
-                                                   c=[l[i] for l in alpha_results.bottlenecks_test], label='alpha_test', marker='v')
-            axes[idx, idy].legend(handles=[scatter_beta_train, scatter_alpha_train, scatter_beta_test, scatter_alpha_test])
+                                                        c=[l[i] for l in alpha_results.bottlenecks_test],
+                                                        label='alpha_test', marker='v')
+            axes[idx, idy].legend(
+                handles=[scatter_beta_train, scatter_alpha_train, scatter_beta_test, scatter_alpha_test])
             axes[idx, idy].set_xlabel('Discrimimnatory loss')
             axes[idx, idy].set_ylabel('Objective loss')
             (Y_start, Y_end), (A_start, A_end) = beta_results.categories[i]
-            category_prob_train = ((Y_start < beta_results.y_train) & (beta_results.y_train <= Y_end) & (A_start < beta_results.a_train) & (
-                        beta_results.a_train <= A_end)).sum() / len(beta_results.y_train)
-            category_prob_test = ((Y_start < beta_results.y_test) & (beta_results.y_test <= Y_end) & (A_start < beta_results.a_test) & (
-                        beta_results.a_test <= A_end)).sum() / len(beta_results.y_test)
+            category_prob_train = ((Y_start < beta_results.y_train) & (beta_results.y_train <= Y_end) & (
+                        A_start < beta_results.a_train) & (
+                                           beta_results.a_train <= A_end)).sum() / len(beta_results.y_train)
+            category_prob_test = ((Y_start < beta_results.y_test) & (beta_results.y_test <= Y_end) & (
+                        A_start < beta_results.a_test) & (
+                                          beta_results.a_test <= A_end)).sum() / len(beta_results.y_test)
             category_desc = f"Y: ({Y_start:.3f} - {Y_end:.3f}), A: ({A_start:.3f} - {A_end:.3f}), P_ya_train: {category_prob_train:.3f}, P_ya_test: {category_prob_test:.3f}"
             axes[idx, idy].set_title(category_desc, fontsize="xx-small")
 
         fig.suptitle(f"{beta_results.fairness_name} vs {alpha_results.fairness_name}")
         plt.tight_layout()
-        plt.savefig(f'./plots/comparison_{beta_results.fairness_name}_{alpha_results.fairness_name}_{beta_results.dataset_name}.pdf')
+        plt.savefig(
+            f'./plots/comparison_{beta_results.fairness_name}_{alpha_results.fairness_name}_{beta_results.dataset_name}.pdf')
         plt.show()

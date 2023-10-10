@@ -9,7 +9,7 @@ from torch import nn
 from models import SimpleNN
 
 sys.path.append(os.path.abspath(os.path.join('./..')))
-from tools import *
+from final_comparison_experiment.tools import *
 
 class FairnessAwareLearningExperiment:
     def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric,
