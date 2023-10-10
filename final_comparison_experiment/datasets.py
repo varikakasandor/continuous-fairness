@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 dirname = os.path.dirname(__file__)
 
 
-def read_dataset(name, label=None, sensitive_attribute=None, fold=None):
+def read_dataset(name, label=None, sensitive_attribute=None, fold=None, **kwargs):
     if name == 'crimes':
         y_name = label if label is not None else 'ViolentCrimesPerPop'
         z_name = sensitive_attribute if sensitive_attribute is not None else 'racepctblack'
@@ -22,7 +22,7 @@ def read_dataset(name, label=None, sensitive_attribute=None, fold=None):
     elif name == "uscensus":
         return read_uscensus()
     elif name == "synthetic":
-        return read_syntetic()
+        return read_syntetic(**kwargs)
     else:
         raise NotImplemented('Dataset {} does not exists'.format(name))
 
@@ -164,7 +164,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
     return data[:nTrain, :], target[:nTrain], to_protect[:nTrain], data[nTrain:, :], target[nTrain:], to_protect[nTrain:]
 
 
-def read_syntetic(eta=0.06, gamma_0=0.1, gamma_1=0.2, train_size=4000, test_size=4000):
+def read_syntetic(eta=0.06, gamma_0=0.1, gamma_1=0.2, train_size=4000, test_size=1000):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)

@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join('./..')))
 from final_comparison_experiment.tools import *
 
 class FairnessAwareLearningExperiment:
-    def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric,
+    def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric, lr,
                  num_epochs=100, print_progress=True):
         x_train, y_train, a_train, x_test, y_test, a_test = data
         self.x_train, self.y_train, self.a_train, self.x_test, self.y_test, self.a_test = torch.tensor(x_train.astype(np.float32)), torch.tensor(y_train.astype(np.float32)), torch.tensor(a_train.astype(np.float32)), torch.tensor(x_test.astype(np.float32)), torch.tensor(y_test.astype(np.float32)), torch.tensor(a_test.astype(np.float32))
@@ -23,14 +23,15 @@ class FairnessAwareLearningExperiment:
         self.print_progress = print_progress
         self.analysis_metric = analysis_metric
         self.num_epochs = num_epochs
+        self.lr = lr
 
-    def train_model(self, model, fairness_weight=1.0, lr=1e-5):
+    def train_model(self, model, fairness_weight=1.0):
         num_epochs = self.num_epochs
         dataset = data_utils.TensorDataset(self.x_train, self.y_train, self.a_train)
         dataset_loader = data_utils.DataLoader(dataset=dataset, batch_size=200, shuffle=True)
 
         data_fitting_loss = nn.BCELoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=0.01)
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.lr, weight_decay=0.01)
 
         for j in range(num_epochs):
             if self.print_progress:

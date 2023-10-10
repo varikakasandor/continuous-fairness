@@ -1,5 +1,8 @@
 from matplotlib import pyplot as plt
 import joblib
+from datetime import datetime
+import multiprocessing
+import itertools
 
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
@@ -7,7 +10,7 @@ from pipeline import FairnessAwareLearningExperiment
 from final_comparison_experiment.tools import *
 
 
-def running_experiments(dataset_name, real_run):
+def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, **kwargs):
     if dataset_name == "crimes":
         intervals = generate_constrained_intervals(2)
         beta_metric = generate_beta(intervals, intervals)
@@ -31,25 +34,27 @@ def running_experiments(dataset_name, real_run):
         beta_metric = generate_beta(alpha_intervals, y_intervals)
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
 
-    dataset = read_dataset(dataset_name)
+    dataset = read_dataset(dataset_name, **kwargs)
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
-    num_epochs = 200 if real_run else 1
-    num_fairness_weights = 50 if real_run else 3
 
     fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
-    fairness_name = "Beta" if real_run else "Beta_trial"
+    fairness_name = "Beta"
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, fairness_name, dataset_name,
                                                       fairness_weights_beta,
-                                                      analysis_metric, num_epochs)
+                                                      analysis_metric, lr, num_epochs)
     beta_results = beta_experiment.run_analysis()
-    joblib.dump(beta_results, f'results/analysis_{fairness_name}_{dataset_name}.joblib')
+    timestamp = datetime.now().timestamp()
+    config_str = f"{dataset_name}_{num_epochs}_{num_fairness_weights}_{timestamp}"
+    if dataset_name == 'synthetic':
+        config_str += f'_{"_".join([f"{k}-{v}" for k,v in kwargs.items()])}'
+    joblib.dump(beta_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
 
     fairness_weights_alpha = np.logspace(np.log10(0.02), np.log10(6), num_fairness_weights)
-    fairness_name = "Alpha" if real_run else "Alpha_trial"
+    fairness_name = "Alpha"
     alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, fairness_name, dataset_name,
-                                                       fairness_weights_alpha, analysis_metric, num_epochs)
+                                                       fairness_weights_alpha, analysis_metric, lr, num_epochs)
     alpha_results = alpha_experiment.run_analysis()
-    joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{dataset_name}.joblib')
+    joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
     return alpha_results, beta_results
 
 
@@ -61,14 +66,32 @@ def load_results(real_run):
     return alpha_results, beta_results
 
 
+def wrapped_exp(params):
+    running_experiments(**params)
+
 if __name__ == "__main__":
-    dataset_name = "adult"
+    dataset_name = "synthetic"
     real_run = False
     create_comparison = True
     load_existing_result = False
 
     if not load_existing_result:
-        alpha_results, beta_results = running_experiments(dataset_name, real_run)
+        num_processes = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=num_processes)
+        default_params = {
+            'dataset_name': 'synthetic',
+            'num_epochs': 2,
+            'num_fairness_weights': 26,
+        }
+        param_combinations = [{**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 3e-5, 1e-4, 3e-6], np.linspace(0.01, 0.5, 6), [(0.1, 0.2), (0.3, 0.3), (0.1, 0.1), (0.1, 0.5)])]
+        print(param_combinations)
+        #pool.map(wrapped_exp, param_combinations)
+        list(map(wrapped_exp, param_combinations))
+
+        pool.close()
+        pool.join()
+
+        #alpha_results, beta_results = running_experiments(dataset_name, real_run)
     else:
         alpha_results, beta_results = load_results(real_run)
 
