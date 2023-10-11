@@ -131,12 +131,21 @@ if __name__ == "__main__":
         path = pathlib.Path('results/')
         alpha_exps = [filename for filename in path.glob('*.joblib') if 'Alpha' in filename.name]
         beta_exps = [filename for filename in path.glob('*.joblib') if 'Beta' in filename.name]
-        assert len(alpha_exps) == len(beta_exps), 'If there are more Beta experiments than Alpha, the algorithm will not automatically select the one with missing experiment pair.'
+        experiments = {}
+        for filename in path.glob('*.joblib'):
+            name = filename.name
+            name = name[name.find('_') + 1:]
+            fairness_name, name = name[:name.find('_')], name[name.find('_') + 1:]
+            if name not in experiments:
+                experiments[name] = [None, None]
+            if fairness_name == 'Alpha':
+                experiments[name][0] = joblib.load(filename)
+            elif fairness_name == 'Beta':
+                experiments[name][1] = joblib.load(filename)
+            else:
+                raise NotImplementedError('Only Alpha and Beta fairness_names are recognized.')
 
-        for alpha_filename, beta_filename in zip(alpha_exps, beta_exps):
-            experiment_name = alpha_filename.name[len('analysis_Alpha_'):] # Removes the analysis_Alpha_ prefix from the filename 
-            alpha_results = joblib.load(alpha_filename)
-            beta_results = joblib.load(beta_filename)
+        for experiment_name, (alpha_results, beta_results) in experiments.items():
             create_comparison(alpha_results, beta_results, experiment_name)
 
 
