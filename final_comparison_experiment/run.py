@@ -38,21 +38,23 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, **kw
     dataset = read_dataset(dataset_name, **kwargs)
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
 
-    fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
-    fairness_name = "Beta"
-    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, fairness_name, dataset_name,
-                                                      fairness_weights_beta,
-                                                      analysis_metric, lr, num_epochs)
-    beta_results = beta_experiment.run_analysis()
     timestamp = datetime.now().timestamp()
     config_str = f"{dataset_name}_{num_epochs}_{num_fairness_weights}_{timestamp}"
     if dataset_name == 'synthetic':
         config_str += f'_{"_".join([f"{k}-{v}" for k,v in kwargs.items()])}'
+
+    fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
+    fairness_name = "Beta"
+    beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, f'{fairness_name}_{config_str}', dataset_name,
+                                                      fairness_weights_beta,
+                                                      analysis_metric, lr, num_epochs)
+    beta_results = beta_experiment.run_analysis()
     joblib.dump(beta_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
+
 
     fairness_weights_alpha = np.logspace(np.log10(0.02), np.log10(6), num_fairness_weights)
     fairness_name = "Alpha"
-    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, fairness_name, dataset_name,
+    alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, f'{fairness_name}_{config_str}', dataset_name,
                                                        fairness_weights_alpha, analysis_metric, lr, num_epochs)
     alpha_results = alpha_experiment.run_analysis()
     joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
@@ -105,7 +107,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = False
-    load_existing_result = True
+    load_existing_result = False
 
     if not load_existing_result:
         num_processes = multiprocessing.cpu_count()
@@ -129,21 +131,12 @@ if __name__ == "__main__":
         path = pathlib.Path('results/')
         alpha_exps = [filename for filename in path.glob('*.joblib') if 'Alpha' in filename.name]
         beta_exps = [filename for filename in path.glob('*.joblib') if 'Beta' in filename.name]
-        experiments = {}
-        for filename in path.glob('*.joblib'):
-            name = filename.name
-            name = name[name.find('_')+1:]
-            fairness_name, name = name[:name.find('_')], name[name.find('_')+1:]
-            if name not in experiments:
-                experiments[name] = [None, None]
-            if fairness_name == 'Alpha':
-                experiments[name][0] = joblib.load(filename)
-            elif fairness_name == 'Beta':
-                experiments[name][1] = joblib.load(filename)
-            else:
-                raise NotImplementedError('Only Alpha and Beta fairness_names are recognized.')
-            
-        for experiment_name, (alpha_results, beta_results) in experiments.items():
+        assert len(alpha_exps) == len(beta_exps), 'If there are more Beta experiments than Alpha, the algorithm will not automatically select the one with missing experiment pair.'
+
+        for alpha_filename, beta_filename in zip(alpha_exps, beta_exps):
+            experiment_name = alpha_filename.name[len('analysis_Alpha_'):] # Removes the analysis_Alpha_ prefix from the filename 
+            alpha_results = joblib.load(alpha_filename)
+            beta_results = joblib.load(beta_filename)
             create_comparison(alpha_results, beta_results, experiment_name)
 
 
