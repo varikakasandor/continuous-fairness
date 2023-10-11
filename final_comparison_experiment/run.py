@@ -80,10 +80,11 @@ if __name__ == "__main__":
         pool = multiprocessing.Pool(processes=num_processes)
         default_params = {
             'dataset_name': 'synthetic',
-            'num_epochs': 2,
+            'num_epochs': 350,
             'num_fairness_weights': 26,
         }
-        param_combinations = [{**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 3e-5, 1e-4, 3e-6], np.linspace(0.01, 0.5, 6), [(0.1, 0.2), (0.3, 0.3), (0.1, 0.1), (0.1, 0.5)])]
+        #param_combinations = [{**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 3e-5, 1e-4, 3e-6], np.linspace(0.01, 0.5, 6), [(0.1, 0.2), (0.3, 0.3), (0.1, 0.1), (0.1, 0.5)])]
+        param_combinations = [{**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 1e-4], np.linspace(0.01, 0.5, 6), [(0.2, 0.1)])]
         print(param_combinations)
         #pool.map(wrapped_exp, param_combinations)
         list(map(wrapped_exp, param_combinations))
