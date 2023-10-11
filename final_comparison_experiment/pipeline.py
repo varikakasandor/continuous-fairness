@@ -14,11 +14,15 @@ from final_comparison_experiment.tools import *
 class MySoftmax:
     def __init__(self, temp):
         self._temp = temp
+        self._weight_grads = False
 
     def __call__(self, tensor):
         tensor_avg = tensor*tensor.sum()
         weights = torch.nn.functional.softmax(tensor_avg*self._temp, dim=0)
+        if not self._weight_grads:
+            weights = weights.detach()
         weighted_max = weights * tensor
+        return weighted_max
 
 CUSTOM_MAX = torch.mean
 #CUSTOM_MAX = torch.max
