@@ -11,6 +11,19 @@ from models import SimpleNN
 sys.path.append(os.path.abspath(os.path.join('./..')))
 from final_comparison_experiment.tools import *
 
+class MySoftmax:
+    def __init__(self, temp):
+        self._temp = temp
+
+    def __call__(self, tensor):
+        tensor_avg = tensor*tensor.sum()
+        weights = torch.nn.functional.softmax(tensor_avg*self._temp, dim=0)
+        weighted_max = weights * tensor
+
+CUSTOM_MAX = torch.mean
+#CUSTOM_MAX = torch.max
+
+
 class FairnessAwareLearningExperiment:
     def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric, lr,
                  num_epochs=100, print_progress=True):
@@ -40,15 +53,15 @@ class FairnessAwareLearningExperiment:
                 def closure():
                     optimizer.zero_grad()
                     prediction = model(x).flatten()
-                    loss = fairness_weight * torch.mean(self.fairness_metric(prediction, a, y)) + data_fitting_loss(
+                    loss = fairness_weight * CUSTOM_MAX(self.fairness_metric(prediction, a, y)) + data_fitting_loss(
                         prediction, y)
                     loss.backward()
                     return loss
 
                 optimizer.step(closure)
             if self.print_progress:
-                bce_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
-                bce_curr_train, nd_curr_train = self.evaluate(model, dataset="train")
+                bce_curr_test, alpha_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
+                bce_curr_train, alpha_curr_test, nd_curr_train = self.evaluate(model, dataset="train")
                 print(
                     f"TEST -- loss: {bce_curr_test}, nd: {nd_curr_test}, combined: {bce_curr_test + fairness_weight * nd_curr_test}")
                 print(
@@ -58,8 +71,10 @@ class FairnessAwareLearningExperiment:
         x, a, y = (self.x_train, self.a_train, self.y_train) if dataset == "train" else (self.x_test, self.a_test, self.y_test)
         prediction = model(x).detach().flatten()
         loss = nn.BCELoss()(prediction, y)
-        nd_loss = torch.max(self.fairness_metric(prediction, a, y))
-        return loss.item(), nd_loss
+        fairness_losses = self.fairness_metric(prediction, a, y)
+        alpha_loss = torch.max(fairness_losses)
+        nd_loss = CUSTOM_MAX(fairness_losses)
+        return loss.item(), alpha_loss, nd_loss
 
     def run_analysis(self):
         objective_losses_train, objective_losses_test = [], []
