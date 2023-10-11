@@ -39,7 +39,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, **kw
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
 
     timestamp = datetime.now().timestamp()
-    config_str = f"{dataset_name}_{num_epochs}_{num_fairness_weights}_{timestamp}"
+    config_str = f"{dataset_name}_{num_epochs}_{lr}_{num_fairness_weights}_{timestamp}"
     if dataset_name == 'synthetic':
         config_str += f'_{"_".join([f"{k}-{v}" for k,v in kwargs.items()])}'
 
@@ -107,7 +107,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = False
-    load_existing_result = False
+    load_existing_result = True
 
     if not load_existing_result:
         num_processes = multiprocessing.cpu_count()
@@ -136,6 +136,7 @@ if __name__ == "__main__":
             name = filename.name
             name = name[name.find('_') + 1:]
             fairness_name, name = name[:name.find('_')], name[name.find('_') + 1:]
+            name = name.split('.joblib')[0]
             if name not in experiments:
                 experiments[name] = [None, None]
             if fairness_name == 'Alpha':
@@ -146,7 +147,8 @@ if __name__ == "__main__":
                 raise NotImplementedError('Only Alpha and Beta fairness_names are recognized.')
 
         for experiment_name, (alpha_results, beta_results) in experiments.items():
-            create_comparison(alpha_results, beta_results, experiment_name)
+            if alpha_results is not None and beta_results is not None:
+                create_comparison(alpha_results, beta_results, experiment_name)
 
 
     
