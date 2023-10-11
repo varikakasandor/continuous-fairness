@@ -179,4 +179,5 @@ def read_syntetic(eta=0.06, gamma_0=0.1, gamma_1=0.2, train_size=4000, test_size
     X_0 = np.where(A, -1, Y_0)
     X_1 = np.where(A, Y_1, -1)
     X = np.stack([A, A] + [0.2*X_0 - 1 + 2*np.random.rand(*X_0.shape) for i in range(16)] + [0.02*X_1 - 1 + 2*np.random.rand(*X_1.shape) for i in range(8)], axis=-1)
+    A[0] = A[-1] = Y[0] = Y[-1] = 1
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
