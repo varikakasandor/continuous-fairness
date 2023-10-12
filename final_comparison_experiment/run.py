@@ -114,13 +114,12 @@ if __name__ == "__main__":
     real_run = True
     single_run = True
     load_existing_result = False
+    use_multiprocessing = False
 
     if not load_existing_result:
         if single_run:
             alpha_results, beta_results = running_experiments(dataset_name, 350 if real_run else 2, 20 if real_run else 2, 1e-5)
         else:
-            num_processes = multiprocessing.cpu_count()
-            pool = multiprocessing.Pool(processes=num_processes)
             default_params = {
                 'dataset_name': dataset_name,
                 'num_epochs': 350,
@@ -130,12 +129,13 @@ if __name__ == "__main__":
             param_combinations = [
                 {**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for
                 (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 1e-4], np.linspace(0.01, 0.5, 6), [(0.2, 0.1)])]
-            print(param_combinations)
-            # pool.map(wrapped_exp, param_combinations)
+            if use_multiprocessing:
+                num_processes = multiprocessing.cpu_count()
+                pool = multiprocessing.Pool(processes=num_processes)
+                pool.map(wrapped_exp, param_combinations)
+                pool.close()
+                pool.join()
             list(map(wrapped_exp, param_combinations))
-
-            pool.close()
-            pool.join()
 
 
     else:
