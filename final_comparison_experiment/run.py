@@ -111,7 +111,7 @@ def wrapped_exp(params):
 
 
 if __name__ == "__main__":
-    dataset_name = "uscensus"
+    dataset_name = "synthetic"
     real_run = True
     single_run = True
     load_existing_result = False
@@ -119,8 +119,7 @@ if __name__ == "__main__":
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 400 if real_run else 2,
-                                                              15 if real_run else 2, 1e-5, information_0 = 0.2, information_1 = 0, train_size = 4000, test_size = 1000, eta = 0.1, gamma_0 = 0.5, gamma_1 = 0.5)
+            alpha_results, beta_results = running_experiments(dataset_name, 200 if real_run else 2, 3 if real_run else 2, 1e-5, etas = [0.5, 0.4, 0.1], gammas = [0.5, 0.1, 0.5], informations = [0.2, 0.2, 0.0], feature_sizes = [2, 2, 10], train_size = 4000, test_size = 1000)
         else:
             default_params = {
                 'dataset_name': dataset_name,
