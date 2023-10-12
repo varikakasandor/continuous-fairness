@@ -11,7 +11,7 @@ from pipeline import FairnessAwareLearningExperiment
 from final_comparison_experiment.tools import *
 
 
-def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, create_comparison_enabled = True, **kwargs):
+def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, create_comparison_enabled=True, **kwargs):
     if dataset_name == "crimes":
         intervals = generate_constrained_intervals(2)
         beta_metric = generate_beta(intervals, intervals)
@@ -56,7 +56,8 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     fairness_name = "Alpha"
     alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, f'{fairness_name}_{config_str}',
                                                        dataset_name,
-                                                       fairness_weights_alpha, analysis_metric, lr, num_epochs, external_params=kwargs)
+                                                       fairness_weights_alpha, analysis_metric, lr, num_epochs,
+                                                       external_params=kwargs)
     alpha_results = alpha_experiment.run_analysis()
     joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
     if create_comparison_enabled:
@@ -112,13 +113,14 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = False
+    single_run = True
     load_existing_result = False
     use_multiprocessing = False
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 350 if real_run else 2, 20 if real_run else 2, 1e-5)
+            alpha_results, beta_results = running_experiments(dataset_name, 400 if real_run else 2,
+                                                              2 if real_run else 2, 1e-5, information_0 = 0.2, information_1 = 0, train_size = 4000, test_size = 1000, eta = 0.1, gamma_0 = 0.5, gamma_1 = 0.5)
         else:
             default_params = {
                 'dataset_name': dataset_name,
@@ -127,10 +129,10 @@ if __name__ == "__main__":
                 'train_size': 4000,
                 'test_size': 1000,
             }
-            # param_combinations = [{**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 3e-5, 1e-4, 3e-6], np.linspace(0.01, 0.5, 6), [(0.1, 0.2), (0.3, 0.3), (0.1, 0.1), (0.1, 0.5)])]
             param_combinations = [
                 {**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for
-                (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 1e-4], np.linspace(0.01, 0.5, 6), [(0.2, 0.1)])]
+                (lr, eta, (gamma_0, gamma_1)) in
+                itertools.product([1e-5, 1e-4], np.linspace(0.01, 0.5, 6), [(0.2, 0.1)])]
             if use_multiprocessing:
                 num_processes = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=num_processes)

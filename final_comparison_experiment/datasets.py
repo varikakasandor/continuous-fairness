@@ -22,7 +22,7 @@ def read_dataset(name, label=None, sensitive_attribute=None, fold=None, **kwargs
     elif name == "uscensus":
         return read_uscensus()
     elif name == "synthetic":
-        return read_syntetic(**kwargs)
+        return read_synthetic(**kwargs)
     else:
         raise NotImplemented('Dataset {} does not exists'.format(name))
 
@@ -164,7 +164,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
     return data[:nTrain, :], target[:nTrain], to_protect[:nTrain], data[nTrain:, :], target[nTrain:], to_protect[nTrain:]
 
 
-def read_syntetic(eta, gamma_0, gamma_1, train_size, test_size):
+def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, train_size, test_size):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)
@@ -178,6 +178,7 @@ def read_syntetic(eta, gamma_0, gamma_1, train_size, test_size):
 
     X_0 = np.where(A, -1, Y_0)
     X_1 = np.where(A, Y_1, -1)
-    X = np.stack([A, A] + [0.2*X_0 - 1 + 2*np.random.rand(*X_0.shape) for i in range(16)] + [0.02*X_1 - 1 + 2*np.random.rand(*X_1.shape) for i in range(8)], axis=-1)
-    A[0] = A[-1] = Y[0] = Y[-1] = 1
+    X = np.stack([A, A] + [information_0 * X_0 - 1 + 2 * np.random.rand(*X_0.shape) for _ in range(10)] + [information_1 * X_1 - 1 + 2 * np.random.rand(*X_1.shape) for
+                                                                                                 _ in range(int(eta * gamma_1 * train_size + 2))], axis=-1)
+    # A[0] = A[-1] = Y[0] = Y[-1] = 1
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
