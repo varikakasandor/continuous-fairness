@@ -30,9 +30,9 @@ class MySoftmax:
 class MaxLosses(Enum):
     MAX = torch.max
     MEAN = torch.mean
-    SOFTMAX = MySoftmax(5)
+    SOFTMAX = MySoftmax(10)
 
-CUSTOM_MAX = MaxLosses.MEAN
+CUSTOM_MAX = MaxLosses.SOFTMAX
 CUSTOM_MAX_NAME = CUSTOM_MAX.name
 CUSTOM_MAX_FUN = CUSTOM_MAX.value
 
