@@ -110,17 +110,11 @@ def wrapped_exp(params):
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     dataset_name = "synthetic"
-    real_run = False
-    load_existing_result = False
-=======
-    dataset_name = "adult"
     real_run = True
     single_run = True
     load_existing_result = False
     use_multiprocessing = False
->>>>>>> ce68454c86ace5f968d6d8b6d9d9b4d1cd968b3d
 
     if not load_existing_result:
         if single_run:
