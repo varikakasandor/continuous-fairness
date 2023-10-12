@@ -30,7 +30,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
 
     if dataset_name == "synthetic":
-        alpha_intervals = generate_constrained_intervals(2)
+        alpha_intervals = generate_constrained_intervals(len(kwargs['etas']))
         y_intervals = generate_constrained_intervals(2)
         beta_metric = generate_beta(alpha_intervals, y_intervals)
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 200 if real_run else 2, 3 if real_run else 2, 1e-5, etas = [0.5, 0.4, 0.1], gammas = [0.5, 0.1, 0.5], informations = [0.2, 0.2, 0.0], feature_sizes = [2, 2, 10], train_size = 4000, test_size = 1000)
+            alpha_results, beta_results = running_experiments(dataset_name, 400 if real_run else 2, 25 if real_run else 2, 1e-5, etas = [0.5, 0.4, 0.1], gammas = [0.5, 0.1, 0.5], informations = [0.2, 0.2, 0.0], feature_sizes = [2, 2, 10], train_size = 4000, test_size = 1000)
         else:
             default_params = {
                 'dataset_name': dataset_name,
