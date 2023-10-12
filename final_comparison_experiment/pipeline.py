@@ -1,5 +1,8 @@
 import os
 import sys
+from enum import Enum
+from datetime import datetime
+import json
 
 import matplotlib.pyplot as plt
 import torch
@@ -21,16 +24,22 @@ class MySoftmax:
         weights = torch.nn.functional.softmax(tensor_avg*self._temp, dim=0)
         if not self._weight_grads:
             weights = weights.detach()
-        weighted_max = weights * tensor
+        weighted_max = weights @ tensor
         return weighted_max
 
-CUSTOM_MAX = torch.mean
-#CUSTOM_MAX = torch.max
+class MaxLosses(Enum):
+    MAX = torch.max
+    MEAN = torch.mean
+    SOFTMAX = MySoftmax(5)
+
+CUSTOM_MAX = MaxLosses.MEAN
+CUSTOM_MAX_NAME = CUSTOM_MAX.name
+CUSTOM_MAX_FUN = CUSTOM_MAX.value
 
 
 class FairnessAwareLearningExperiment:
     def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric, lr,
-                 num_epochs=100, print_progress=True):
+                 num_epochs=100, print_progress=True, external_params={}):
         x_train, y_train, a_train, x_test, y_test, a_test = data
         self.x_train, self.y_train, self.a_train, self.x_test, self.y_test, self.a_test = torch.tensor(x_train.astype(np.float32)), torch.tensor(y_train.astype(np.float32)), torch.tensor(a_train.astype(np.float32)), torch.tensor(x_test.astype(np.float32)), torch.tensor(y_test.astype(np.float32)), torch.tensor(a_test.astype(np.float32))
         self.fairness_metric = fairness_metric
@@ -41,6 +50,19 @@ class FairnessAwareLearningExperiment:
         self.analysis_metric = analysis_metric
         self.num_epochs = num_epochs
         self.lr = lr
+        self.external_params = external_params
+
+    @property
+    def _params(self):
+        params = {
+            'fairness_name': self.fairness_name,
+            'dataset_name': self.dataset_name,
+            'num_epochs': self.num_epochs,
+            'learning_rate': self.lr,
+            'CUSTOM_MAX': CUSTOM_MAX_NAME
+        }
+        params.update(self.external_params)
+        return params
 
     def train_model(self, model, fairness_weight=1.0):
         num_epochs = self.num_epochs
@@ -57,19 +79,19 @@ class FairnessAwareLearningExperiment:
                 def closure():
                     optimizer.zero_grad()
                     prediction = model(x).flatten()
-                    loss = fairness_weight * CUSTOM_MAX(self.fairness_metric(prediction, a, y)) + data_fitting_loss(
+                    loss = fairness_weight * CUSTOM_MAX_FUN(self.fairness_metric(prediction, a, y)) + data_fitting_loss(
                         prediction, y)
                     loss.backward()
                     return loss
 
                 optimizer.step(closure)
             if self.print_progress:
+                bce_curr_train, alpha_curr_train, nd_curr_train = self.evaluate(model, dataset="train")
                 bce_curr_test, alpha_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
-                bce_curr_train, alpha_curr_test, nd_curr_train = self.evaluate(model, dataset="train")
                 print(
-                    f"TEST -- loss: {bce_curr_test}, nd: {nd_curr_test}, combined: {bce_curr_test + fairness_weight * nd_curr_test}")
+                    f"TEST -- L: {bce_curr_test}, alpha: {alpha_curr_test}, nd: {nd_curr_test}, combined: {bce_curr_test + fairness_weight * nd_curr_test}")
                 print(
-                    f"TRAIN -- loss: {bce_curr_train}, nd: {nd_curr_train}, combined: {bce_curr_train + fairness_weight * nd_curr_train}")
+                    f"TRAIN -- loss: {bce_curr_train}, alpha: {alpha_curr_train}, nd: {nd_curr_train}, combined: {bce_curr_train + fairness_weight * nd_curr_train}")
 
     def evaluate(self, model, dataset="test"):
         x, a, y = (self.x_train, self.a_train, self.y_train) if dataset == "train" else (self.x_test, self.a_test, self.y_test)
@@ -77,7 +99,7 @@ class FairnessAwareLearningExperiment:
         loss = nn.BCELoss()(prediction, y)
         fairness_losses = self.fairness_metric(prediction, a, y)
         alpha_loss = torch.max(fairness_losses)
-        nd_loss = CUSTOM_MAX(fairness_losses)
+        nd_loss = CUSTOM_MAX_FUN(fairness_losses)
         return loss.item(), alpha_loss, nd_loss
 
     def run_analysis(self):
@@ -105,6 +127,30 @@ class FairnessAwareLearningExperiment:
             objective_losses_test.append(loss_test)
             nd_losses_train.append(nd_loss_train)
             nd_losses_test.append(nd_loss_test)
+
+            # -- Saves run meta data
+            bce_curr_train, alpha_curr_train, nd_curr_train = self.evaluate(model, dataset="train")
+            bce_curr_test, alpha_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
+            run_records = self._params
+            local_params = {
+                'fairness_weight': fairness_weight
+            }
+            run_records.update(local_params)
+            results_dict = {
+                'train_loss': float(bce_curr_train),
+                'alpha_train_loss': float(alpha_curr_train),
+                'nd_train_loss': float(nd_curr_train),
+                'test_loss': float(bce_curr_test),
+                'alpha_test_loss': float(alpha_curr_test),
+                'nd_test_loss': float(nd_curr_test),
+                #'bottleneck_train': curr_bottleneck_train,
+                #'bottleneck_test': curr_bottleneck_test,
+            }
+            run_records.update(results_dict)
+            filename = f'records/run_{datetime.now().timestamp()}.json'
+            with open(filename, 'w') as file:
+                json.dump(run_records, file)
+            
         objective_losses_train, objective_losses_test, nd_losses_train, nd_losses_test = np.array(objective_losses_train), np.array(objective_losses_test), np.array(nd_losses_train), np.array(nd_losses_test)
 
         num_categories = len(categories)
@@ -130,4 +176,7 @@ class FairnessAwareLearningExperiment:
         plt.tight_layout()
         plt.savefig(f'./plots/analysis_{self.fairness_name}_{self.dataset_name}.pdf')
         plt.show()
+
+        
+
         return ExperimentResults(self.y_train, self.a_train, self.y_test, self.a_test, categories, objective_losses_train, nd_losses_train, bottlenecks_train, objective_losses_test, nd_losses_test, bottlenecks_test, self.fairness_name, self.dataset_name)

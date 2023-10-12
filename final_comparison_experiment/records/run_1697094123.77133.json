@@ -1,0 +1,1 @@
+{"fairness_name": "Beta", "dataset_name": "synthetic", "num_epochs": 350, "learning_rate": 1e-05, "CUSTOM_MAX": "MEAN", "fairness_weight": 0.1, "train_loss": 0.3653525114059448, "alpha_train_loss": 0.010351949371397495, "nd_train_loss": 0.005549606867134571, "test_loss": 0.360213965177536, "alpha_test_loss": 0.015889232978224754, "nd_test_loss": 0.007162532769143581}
