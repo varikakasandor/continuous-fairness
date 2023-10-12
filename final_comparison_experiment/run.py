@@ -48,7 +48,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, f'{fairness_name}_{config_str}',
                                                       dataset_name,
                                                       fairness_weights_beta,
-                                                      analysis_metric, lr, num_epochs)
+                                                      analysis_metric, lr, num_epochs, external_params=kwargs)
     beta_results = beta_experiment.run_analysis()
     joblib.dump(beta_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
 
@@ -56,7 +56,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     fairness_name = "Alpha"
     alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, f'{fairness_name}_{config_str}',
                                                        dataset_name,
-                                                       fairness_weights_alpha, analysis_metric, lr, num_epochs)
+                                                       fairness_weights_alpha, analysis_metric, lr, num_epochs, external_params=kwargs)
     alpha_results = alpha_experiment.run_analysis()
     joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
     if create_comparison_enabled:
@@ -112,7 +112,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = True
+    single_run = False
     load_existing_result = False
     use_multiprocessing = False
 
@@ -124,6 +124,8 @@ if __name__ == "__main__":
                 'dataset_name': dataset_name,
                 'num_epochs': 350,
                 'num_fairness_weights': 26,
+                'train_size': 4000,
+                'test_size': 1000,
             }
             # param_combinations = [{**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for (lr, eta, (gamma_0, gamma_1)) in itertools.product([1e-5, 3e-5, 1e-4, 3e-6], np.linspace(0.01, 0.5, 6), [(0.1, 0.2), (0.3, 0.3), (0.1, 0.1), (0.1, 0.5)])]
             param_combinations = [

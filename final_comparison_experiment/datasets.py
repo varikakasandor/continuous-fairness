@@ -164,7 +164,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
     return data[:nTrain, :], target[:nTrain], to_protect[:nTrain], data[nTrain:, :], target[nTrain:], to_protect[nTrain:]
 
 
-def read_syntetic(eta=0.06, gamma_0=0.1, gamma_1=0.2, train_size=4000, test_size=1000):
+def read_syntetic(eta, gamma_0, gamma_1, train_size, test_size):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)

@@ -55,7 +55,7 @@ class FairnessAwareLearningExperiment:
     @property
     def _params(self):
         params = {
-            'fairness_name': self.fairness_name,
+            'fairness_name': self.fairness_name.split('_')[0],
             'dataset_name': self.dataset_name,
             'num_epochs': self.num_epochs,
             'learning_rate': self.lr,
