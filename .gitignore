@@ -13,3 +13,4 @@ __pycache__/
 *.test
 *.zip
 *.joblib
+run_*.json
