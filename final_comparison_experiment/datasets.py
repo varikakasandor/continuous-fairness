@@ -186,4 +186,5 @@ def read_synthetic(etas, gammas, informations, feature_sizes, train_size, test_s
     for i in range(num_categories):
         X_list += [informations[i] * X_base[i] - 1 + 2 * np.random.rand(size) for _ in range(feature_sizes[i])]
     X = np.stack(X_list, axis=-1)
+    A = A / (num_categories - 1)
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
