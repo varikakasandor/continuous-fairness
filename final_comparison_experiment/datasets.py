@@ -8,6 +8,8 @@ from folktables import ACSDataSource, ACSEmployment
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+from final_comparison_experiment.tools import RANDOM_SEED
+
 dirname = os.path.dirname(__file__)
 
 
@@ -174,6 +176,7 @@ def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size
     gamma_1: P(Y=1|A)
     """
     assert abs(sum(etas) - 1.0) < 0.001
+    np.random.seed(RANDOM_SEED)
     size = train_size + test_size
     num_categories = len(etas)
     A = np.random.choice(np.arange(num_categories), size=size, replace=True, p=etas)

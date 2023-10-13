@@ -112,8 +112,6 @@ def wrapped_exp(params):
 
 
 if __name__ == "__main__":
-    np.random.seed(RANDOM_SEED)
-
     dataset_name = "synthetic"
     real_run = True
     single_run = True
@@ -122,12 +120,19 @@ if __name__ == "__main__":
 
     if not load_existing_result:
         if single_run:
+            # alpha_results, beta_results = running_experiments(dataset_name, 100 if real_run else 2,
+            #                                                  20 if real_run else 2,
+            #                                                  1e-4, eta=0.4, gamma_0=0.2, gamma_1=0.1,
+            #                                                  information_0=0.2, information_1=0.02,
+            #                                                  feature_size_0=5, feature_size_1=242,
+            #                                                  train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
             alpha_results, beta_results = running_experiments(dataset_name, 100 if real_run else 2,
-                                                              20 if real_run else 2,
-                                                              1e-4, eta=0.4, gamma_0=0.2, gamma_1=0.1,
-                                                              information_0=0.2, information_1=0.02,
-                                                              feature_size_0=2, feature_size_1=242,
-                                                              train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
+                                                                20 if real_run else 2,
+                                                                1e-4, eta=0.4, gamma_0=0.5, gamma_1=0.1,
+                                                                information_0=0.2, information_1=0.1,
+                                                                feature_size_0=5, feature_size_1=242,
+                                                                train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
+
         else:
             default_params = {
                 'dataset_name': 'synthetic',
@@ -156,7 +161,7 @@ if __name__ == "__main__":
                 'gamma_1': [0.01, 0.1, 0.3, 0.5],
                 'information_0': [0.05, 0.1, 0.5, 1],
                 'information_1': [0.0, 0.1, 0.5, 1],
-                'feature_size_0': [2, 5, 10, 50],
+                'feature_size_0': [2, 5, 50],
                 'feature_size_1': [5, 30, 60, 100, 300]
             }
             param_combinations = [default_params]
