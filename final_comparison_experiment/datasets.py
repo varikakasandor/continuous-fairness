@@ -8,7 +8,7 @@ from folktables import ACSDataSource, ACSEmployment
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from final_comparison_experiment.tools import RANDOM_SEED
+from tools import RANDOM_SEED
 
 dirname = os.path.dirname(__file__)
 
