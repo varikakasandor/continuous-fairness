@@ -86,7 +86,7 @@ def create_plots_from_csvs():
         title_values = [str(data[topic][0]) for topic in title_topics]
         title = '_'.join(title_values) + '_CON'
         plt.title(title)
-        plt.savefig(f'{csv_file.name[5:15]}_what_we_suffer.pdf')
+        plt.savefig(f'./plots/{csv_file.name[5:15]}_what_we_suffer.pdf')
         plt.clf()
         plt.scatter(alpha_kappas, alpha_nd_losses_00, c='blue', label='alpha', marker='v')
         plt.scatter(beta_kappas, beta_nd_losses_00, c='blue', label='beta', marker='x')
@@ -98,7 +98,7 @@ def create_plots_from_csvs():
         title_values = [str(data[topic][0]) for topic in title_topics]
         title = '_'.join(title_values) + '_PRO'
         plt.title(title)
-        plt.savefig(f'{csv_file.name[5:15]}_what_we_gain.pdf')
+        plt.savefig(f'./plots/{csv_file.name[5:15]}_what_we_gain.pdf')
         plt.clf()
 
 
