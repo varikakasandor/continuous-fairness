@@ -113,13 +113,22 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = False
+    single_run = True
     load_existing_result = False
     use_multiprocessing = False
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 2 if real_run else 2, 3 if real_run else 2, 1e-5, etas = [0.5, 0.4, 0.1], gammas = [0.5, 0.1, 0.5], informations = [0.2, 0.2, 0.0], feature_sizes = [2, 2, 10], train_size = 4000, test_size = 1000)
+            alpha_results, beta_results = running_experiments(dataset_name, 150 if real_run else 2,
+                                                              20 if real_run else 2,
+                                                              1e-4, etas=[0.05, 0.95], gammas=[0.5, 0.5],
+                                                              informations=[0.2, 0.02], feature_sizes=[16, 8],
+                                                              train_size=4000, test_size=1000)
+            """alpha_results, beta_results = running_experiments(dataset_name, 150 if real_run else 2,
+                                                              20 if real_run else 2,
+                                                              1e-4, etas=[0.5, 0.5], gammas=[0.1, 0.1],
+                                                              informations=[0.2, 0.02], feature_sizes=[16, 8],
+                                                              train_size=4000, test_size=1000)"""
         else:
             default_params = {
                 'dataset_name': dataset_name,
@@ -129,9 +138,11 @@ if __name__ == "__main__":
                 'test_size': 1000,
             }
             param_combinations = [
-                {**(default_params.copy()), **({'lr': lr, 'etas': etas, 'gammas': gammas, 'informations': informations, 'feature_sizes': feature_sizes})} for
+                {**(default_params.copy()), **({'lr': lr, 'etas': etas, 'gammas': gammas, 'informations': informations,
+                                                'feature_sizes': feature_sizes})} for
                 (lr, etas, gammas, informations, feature_sizes) in
-                itertools.product([1e-5], [[0.5, 0.3, 0.2], [0.45, 0.45, 0.1]], [[0.5, 0.5, 0.5], [0.3, 0.3, 0.1]], [[10, 1, 0], [100, 100, 100]], [[10, 10, 10], [1, 5, 30], [30, 5, 1]])]
+                itertools.product([1e-5], [[0.5, 0.3, 0.2], [0.45, 0.45, 0.1]], [[0.5, 0.5, 0.5], [0.3, 0.3, 0.1]],
+                                  [[10, 1, 0], [100, 100, 100]], [[10, 10, 10], [1, 5, 30], [30, 5, 1]])]
             if use_multiprocessing:
                 num_processes = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=num_processes)
