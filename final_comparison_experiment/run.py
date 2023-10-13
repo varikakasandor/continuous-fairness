@@ -9,7 +9,7 @@ import copy
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
 from pipeline import FairnessAwareLearningExperiment
-from final_comparison_experiment.tools import *
+from tools import *
 
 
 def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, create_comparison_enabled=True, **kwargs):
