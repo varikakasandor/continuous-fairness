@@ -35,7 +35,7 @@ class MaxLosses(Enum):
     SOFTMAX = MySoftmax(10)
 
 
-CUSTOM_MAX = MaxLosses.MAX
+CUSTOM_MAX = MaxLosses.SOFTMAX
 CUSTOM_MAX_NAME = CUSTOM_MAX.name
 CUSTOM_MAX_FUN = CUSTOM_MAX.value
 
@@ -168,10 +168,10 @@ class FairnessAwareLearningExperiment:
 
         num_categories = len(categories)
         plot_dim_1, plot_dim_2 = find_optimal_subplot_dims(num_categories)
-        fig, axes = plt.subplots(plot_dim_1, plot_dim_2, figsize=(plot_dim_1 * 4, plot_dim_2 * 4))
+        fig, axes = plt.subplots(plot_dim_1, plot_dim_2, figsize=(plot_dim_2 * 4, plot_dim_1 * 4))
 
         for i in range(num_categories):
-            idx, idy = i // plot_dim_1, i % plot_dim_1
+            idx, idy = i // plot_dim_2, i % plot_dim_2
             scatter_train = axes[idx, idy].scatter(nd_losses_train[:, i], objective_losses_train,
                                                    c=[l[i] for l in bottlenecks_train], label='train')
             scatter_test = axes[idx, idy].scatter(nd_losses_test[:, i], objective_losses_test,

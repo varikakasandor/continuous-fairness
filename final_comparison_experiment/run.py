@@ -30,7 +30,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
 
     if dataset_name == "synthetic":
-        alpha_intervals = generate_constrained_intervals(2)
+        alpha_intervals = generate_constrained_intervals(len(kwargs['etas']))
         y_intervals = generate_constrained_intervals(2)
         beta_metric = generate_beta(alpha_intervals, y_intervals)
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
@@ -68,10 +68,10 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
 def create_comparison(alpha_results, beta_results, experiment_name):
     num_categories = len(beta_results.categories)
     plot_dim_1, plot_dim_2 = find_optimal_subplot_dims(num_categories)
-    fig, axes = plt.subplots(plot_dim_1, plot_dim_2, figsize=(plot_dim_1 * 4, plot_dim_2 * 4))
+    fig, axes = plt.subplots(plot_dim_1, plot_dim_2, figsize=(plot_dim_2 * 4, plot_dim_1 * 4))
 
     for i in range(num_categories):
-        idx, idy = i // plot_dim_1, i % plot_dim_1
+        idx, idy = i // plot_dim_2, i % plot_dim_2
         scatter_beta_train = axes[idx, idy].scatter(beta_results.nd_loss_train[:, i], beta_results.obj_loss_train,
                                                     c=[l[i] for l in beta_results.bottlenecks_train],
                                                     label='beta_train', marker='x')
@@ -107,7 +107,7 @@ def create_comparison(alpha_results, beta_results, experiment_name):
 
 
 def wrapped_exp(params):
-    running_experiments(**params, create_comparison_enabled=False)
+    running_experiments(**params, create_comparison_enabled=True)
 
 
 if __name__ == "__main__":
@@ -119,20 +119,30 @@ if __name__ == "__main__":
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 400 if real_run else 2,
-                                                              2 if real_run else 2, 1e-5, information_0 = 0.2, information_1 = 0, train_size = 4000, test_size = 1000, eta = 0.1, gamma_0 = 0.5, gamma_1 = 0.5)
+            alpha_results, beta_results = running_experiments(dataset_name, 150 if real_run else 2,
+                                                              20 if real_run else 2,
+                                                              1e-4, etas=[0.4, 0.6], gammas=[0.2, 0.1],
+                                                              informations=[0.2, 0.02], feature_sizes=[16, 8],
+                                                              train_size=4000, test_size=1000)
+            """alpha_results, beta_results = running_experiments(dataset_name, 350 if real_run else 2,
+                                                              20 if real_run else 2,
+                                                              1e-4, etas=[0.5, 0.5], gammas=[0.1, 0.1],
+                                                              informations=[0.2, 0.02], feature_sizes=[16, 8],
+                                                              train_size=4000, test_size=1000)"""
         else:
             default_params = {
                 'dataset_name': dataset_name,
-                'num_epochs': 350,
-                'num_fairness_weights': 26,
+                'num_epochs': 300,
+                'num_fairness_weights': 20,
                 'train_size': 4000,
                 'test_size': 1000,
             }
             param_combinations = [
-                {**(default_params.copy()), **({'lr': lr, 'eta': eta, 'gamma_0': gamma_0, 'gamma_1': gamma_1})} for
-                (lr, eta, (gamma_0, gamma_1)) in
-                itertools.product([1e-5, 1e-4], np.linspace(0.01, 0.5, 6), [(0.2, 0.1)])]
+                {**(default_params.copy()), **({'lr': lr, 'etas': etas, 'gammas': gammas, 'informations': informations,
+                                                'feature_sizes': feature_sizes})} for
+                (lr, etas, gammas, informations, feature_sizes) in
+                itertools.product([1e-5], [[0.5, 0.3, 0.2], [0.45, 0.45, 0.1]], [[0.5, 0.5, 0.5], [0.3, 0.3, 0.1]],
+                                  [[10, 1, 0], [100, 100, 100]], [[10, 10, 10], [1, 5, 30], [30, 5, 1]])]
             if use_multiprocessing:
                 num_processes = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=num_processes)

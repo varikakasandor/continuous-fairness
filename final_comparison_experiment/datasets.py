@@ -33,13 +33,16 @@ def read_uscensus():
     features, label, group = ACSEmployment.df_to_numpy(acs_data)
     group = group.astype(float)
     group /= np.max(group)
-    x_train, x_test, y_train, y_test, a_train, a_test = train_test_split(features, label, group, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test, a_train, a_test = train_test_split(features, label, group, test_size=0.2,
+                                                                         random_state=42)
     return x_train, y_train, a_train, x_test, y_test, a_test
+
 
 def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack', fold=1):
     if not os.path.isfile('./data/communities.data'):
         urllib.request.urlretrieve(
-            "http://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data", "./data/communities.data")
+            "http://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.data",
+            "./data/communities.data")
         urllib.request.urlretrieve(
             "http://archive.ics.uci.edu/ml/machine-learning-databases/communities/communities.names",
             "./data/communities.names")
@@ -161,24 +164,27 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
     target = (target + 1) / 2
     to_protect = 1. * (datamat[:, 9] != datamat[:, 9][0])
     data = np.delete(datamat, 9, axis=1)  # TODO: discuss if A should be dropped from X or not
-    return data[:nTrain, :], target[:nTrain], to_protect[:nTrain], data[nTrain:, :], target[nTrain:], to_protect[nTrain:]
+    return data[:nTrain, :], target[:nTrain], to_protect[:nTrain], data[nTrain:, :], target[nTrain:], to_protect[
+                                                                                                      nTrain:]
 
 
-def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, train_size, test_size):
+def read_synthetic(etas, gammas, informations, feature_sizes, train_size, test_size):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)
     gamma_1: P(Y=1|A)
     """
+    assert abs(sum(etas) - 1.0) < 0.001
     size = train_size + test_size
-    A = np.random.choice([0,1], size=size, replace=True, p=[1-eta, eta]) # generates the A values
-    Y_0 = np.random.choice([0,1], size=size, replace=True, p=[1-gamma_0, gamma_0]) # generates Y values given A=0
-    Y_1 = np.random.choice([0,1], size=size, replace=True, p=[1-gamma_1, gamma_1]) # generates Y values given A=1
-    Y = np.where(A, Y_1, Y_0) # choose Y_a for every sample
-
-    X_0 = np.where(A, -1, Y_0)
-    X_1 = np.where(A, Y_1, -1)
-    X = np.stack([A, A] + [information_0 * X_0 - 1 + 2 * np.random.rand(*X_0.shape) for _ in range(10)] + [information_1 * X_1 - 1 + 2 * np.random.rand(*X_1.shape) for
-                                                                                                 _ in range(int(eta * gamma_1 * train_size + 2))], axis=-1)
-    # A[0] = A[-1] = Y[0] = Y[-1] = 1
+    num_categories = len(etas)
+    A = np.random.choice(np.arange(num_categories), size=size, replace=True, p=etas)
+    Y_options = np.vstack([np.random.choice([0, 1], size=size, replace=True, p=[gammas[i], 1 - gammas[i]]) for i in
+                           range(num_categories)])
+    Y = np.select([A == i for i in range(num_categories)], Y_options)
+    X_base = np.vstack([np.where(A == i, Y[i], -10) for i in range(num_categories)])
+    X_list = [A, A]
+    for i in range(num_categories):
+        X_list += [informations[i] * X_base[i] - 1 + 2 * np.random.rand(size) for _ in range(feature_sizes[i])]
+    X = np.stack(X_list, axis=-1)
+    A = A / (num_categories - 1)
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
