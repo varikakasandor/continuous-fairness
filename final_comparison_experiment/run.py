@@ -4,6 +4,7 @@ from datetime import datetime
 import multiprocessing
 import itertools
 import pathlib
+import copy
 
 from datasets import read_dataset
 from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
@@ -113,7 +114,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = True
+    single_run = False
     load_existing_result = False
     use_multiprocessing = False
 
@@ -122,32 +123,45 @@ if __name__ == "__main__":
             alpha_results, beta_results = running_experiments(dataset_name, 100 if real_run else 2,
                                                               20 if real_run else 2,
                                                               1e-4, eta=0.4, gamma_0=0.2, gamma_1=0.1,
-                                                              information_0=0.2,
-                                                              information_1=0.02, train_size=6000, test_size=6000)
-            """alpha_results, beta_results = running_experiments(dataset_name, 250 if real_run else 2,
-                                                              20 if real_run else 2,
-                                                              1e-4, etas=[0.4, 0.6], gammas=[0.2, 0.1],
-                                                              informations=[0.2, 0.02], feature_sizes=[16, 8],
-                                                              train_size=4000, test_size=1000)"""
-            """alpha_results, beta_results = running_experiments(dataset_name, 350 if real_run else 2,
-                                                              20 if real_run else 2,
-                                                              1e-4, etas=[0.5, 0.5], gammas=[0.1, 0.1],
-                                                              informations=[0.2, 0.02], feature_sizes=[16, 8],
-                                                              train_size=4000, test_size=1000)"""
+                                                              information_0=0.2, information_1=0.02,
+                                                              feature_size_0=10, feature_size_1=62,
+                                                              train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
         else:
             default_params = {
-                'dataset_name': dataset_name,
-                'num_epochs': 300,
+                'dataset_name': 'synthetic',
+                'num_epochs': 100,
                 'num_fairness_weights': 20,
                 'train_size': 6000,
                 'test_size': 6000,
+                'eta': 0.4,
+                'gamma_0': 0.2,
+                'gamma_1': 0.1,
+                'information_0': 0.2,
+                'information_1': 0.02,
+                'feature_size_0': 10,
+                'feature_size_1': 242
             }
-            param_combinations = [
-                {**(default_params.copy()), **({'lr': lr, 'etas': etas, 'gammas': gammas, 'informations': informations,
-                                                'feature_sizes': feature_sizes})} for
-                (lr, etas, gammas, informations, feature_sizes) in
-                itertools.product([1e-5], [[0.5, 0.3, 0.2], [0.45, 0.45, 0.1]], [[0.5, 0.5, 0.5], [0.3, 0.3, 0.1]],
-                                  [[10, 1, 0], [100, 100, 100]], [[10, 10, 10], [1, 5, 30], [30, 5, 1]])]
+            alternative_param_options = {
+                'dataset_name': [],
+                'num_epochs': [],
+                'num_fairness_weights': [],
+                'train_size': [],
+                'test_size': [],
+                'eta': [0.1, 0.3, 0.5],
+                'gamma_0': [0.01, 0.1, 0.3, 0.5],
+                'gamma_1': [0.01, 0.1, 0.3, 0.5],
+                'information_0': [0.05, 0.1, 0.5, 1],
+                'information_1': [0.0, 0.1, 0.5, 1],
+                'feature_size_0': [2, 5, 10, 50],
+                'feature_size_1': [5, 30, 100, 300]
+            }
+            param_combinations = [default_params]
+            for (param, options) in alternative_param_options.items():
+                for new_val in options:
+                    curr_param_combination = copy.deepcopy(default_params)
+                    curr_param_combination[param] = new_val
+                    param_combinations.append(curr_param_combination)
+
             if use_multiprocessing:
                 num_processes = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=num_processes)

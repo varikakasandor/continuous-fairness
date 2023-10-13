@@ -190,7 +190,7 @@ def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
 
 
-def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, train_size, test_size):
+def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, feature_size_0, feature_size_1, train_size, test_size):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)
@@ -204,7 +204,7 @@ def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, train_si
 
     X_0 = np.where(A, 0, 2 * Y_0 - 1)
     X_1 = np.where(A, 2 * Y_1 - 1, -1)
-    X = np.stack([A, A] + [information_0 * X_0 - 1 + 2 * np.random.rand(*X_0.shape) for _ in range(10)] + [information_1 * X_1 - 1 + 2 * np.random.rand(*X_1.shape) for
-                                                                                                 _ in range(int(eta * gamma_1 * train_size + 2))], axis=-1)
+    X = np.stack([A, A] + [information_0 * X_0 - 1 + 2 * np.random.rand(*X_0.shape) for _ in range(feature_size_0)] + [information_1 * X_1 - 1 + 2 * np.random.rand(*X_1.shape) for
+                                                                                                 _ in range(feature_size_1)], axis=-1)
     # A[0] = A[-1] = Y[0] = Y[-1] = 1
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
