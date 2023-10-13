@@ -153,7 +153,7 @@ if __name__ == "__main__":
                 'information_0': [0.05, 0.1, 0.5, 1],
                 'information_1': [0.0, 0.1, 0.5, 1],
                 'feature_size_0': [2, 5, 10, 50],
-                'feature_size_1': [5, 30, 100, 300]
+                'feature_size_1': [5, 30, 60, 100, 300]
             }
             param_combinations = [default_params]
             for (param, options) in alternative_param_options.items():
