@@ -35,7 +35,7 @@ class MaxLosses(Enum):
     SOFTMAX = MySoftmax(10)
 
 
-CUSTOM_MAX = MaxLosses.MAX
+CUSTOM_MAX = MaxLosses.SOFTMAX
 CUSTOM_MAX_NAME = CUSTOM_MAX.name
 CUSTOM_MAX_FUN = CUSTOM_MAX.value
 

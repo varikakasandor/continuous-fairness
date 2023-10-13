@@ -121,10 +121,10 @@ if __name__ == "__main__":
         if single_run:
             alpha_results, beta_results = running_experiments(dataset_name, 150 if real_run else 2,
                                                               20 if real_run else 2,
-                                                              1e-4, etas=[0.05, 0.95], gammas=[0.5, 0.5],
+                                                              1e-4, etas=[0.4, 0.6], gammas=[0.2, 0.1],
                                                               informations=[0.2, 0.02], feature_sizes=[16, 8],
                                                               train_size=4000, test_size=1000)
-            """alpha_results, beta_results = running_experiments(dataset_name, 150 if real_run else 2,
+            """alpha_results, beta_results = running_experiments(dataset_name, 350 if real_run else 2,
                                                               20 if real_run else 2,
                                                               1e-4, etas=[0.5, 0.5], gammas=[0.1, 0.1],
                                                               informations=[0.2, 0.02], feature_sizes=[16, 8],
