@@ -33,8 +33,7 @@ def read_uscensus():
     features, label, group = ACSEmployment.df_to_numpy(acs_data)
     group = group.astype(float)
     group /= np.max(group)
-    x_train, x_test, y_train, y_test, a_train, a_test = train_test_split(features, label, group, test_size=0.2,
-                                                                         random_state=42)
+    x_train, x_test, y_train, y_test, a_train, a_test = train_test_split(features, label, group, test_size=0.2)
     return x_train, y_train, a_train, x_test, y_test, a_test
 
 

@@ -13,3 +13,6 @@ def find_optimal_subplot_dims(num_plots):
         plot_dim_1 -= 1
     plot_dim_2 = num_plots // plot_dim_1
     return plot_dim_1, plot_dim_2
+
+
+RANDOM_SEED = 42

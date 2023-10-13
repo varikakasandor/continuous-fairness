@@ -112,6 +112,8 @@ def wrapped_exp(params):
 
 
 if __name__ == "__main__":
+    np.random.seed(RANDOM_SEED)
+
     dataset_name = "synthetic"
     real_run = True
     single_run = True
