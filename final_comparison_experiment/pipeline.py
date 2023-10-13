@@ -105,13 +105,14 @@ class FairnessAwareLearningExperiment:
         prediction = model(x).detach().flatten()
         loss = nn.BCELoss()(prediction, y)
         fairness_losses = self.fairness_metric(prediction, a, y)
-        alpha_loss = torch.max(fairness_losses)
+        tmp, _ = self.analysis_metric(prediction, a, y)
+        alpha_loss = torch.max(tmp)
         nd_loss = CUSTOM_MAX_FUN(fairness_losses)
         return loss.item(), alpha_loss, nd_loss
 
     def run_analysis(self):
         objective_losses_train, objective_losses_test = [], []
-        nd_losses_train, nd_losses_test = [], []
+        alpha_losses_train, alpha_losses_test = [], []
         categories = None
         bottlenecks_train, bottlenecks_test = [], []
         for fairness_weight in self.fairness_weights:
@@ -121,49 +122,49 @@ class FairnessAwareLearningExperiment:
 
             prediction_train, prediction_test = model(self.x_train).detach().flatten(), model(
                 self.x_test).detach().flatten()
-            loss_train, loss_test = nn.BCELoss()(prediction_train, self.y_train), nn.BCELoss()(prediction_test,
+            objective_loss_train, objective_loss_test = nn.BCELoss()(prediction_train, self.y_train), nn.BCELoss()(prediction_test,
                                                                                                self.y_test)
-            nd_loss_train, categories_train = self.analysis_metric(prediction_train, self.a_train,
+            alpha_loss_train, categories_train = self.analysis_metric(prediction_train, self.a_train,
                                                                    self.y_train)  # categories is the same for all iterations, should be restructured
-            nd_loss_test, categories_test = self.analysis_metric(prediction_test, self.a_test, self.y_test)
+            alpha_loss_test, categories_test = self.analysis_metric(prediction_test, self.a_test, self.y_test)
             assert categories_train == categories_test
             categories = categories_train
-            curr_bottleneck_train, curr_bottleneck_test = ["green"] * len(nd_loss_train), ["blue"] * len(nd_loss_test)
-            curr_bottleneck_train[nd_loss_train.index(max(nd_loss_train))], curr_bottleneck_test[
-                nd_loss_test.index(max(nd_loss_test))] = "red", "orange"
+            curr_bottleneck_train, curr_bottleneck_test = ["green"] * len(alpha_loss_train), ["blue"] * len(alpha_loss_test)
+            curr_bottleneck_train[alpha_loss_train.index(max(alpha_loss_train))], curr_bottleneck_test[
+                alpha_loss_test.index(max(alpha_loss_test))] = "red", "orange"
             bottlenecks_train.append(curr_bottleneck_train)
             bottlenecks_test.append(curr_bottleneck_test)
-            objective_losses_train.append(loss_train)
-            objective_losses_test.append(loss_test)
-            nd_losses_train.append(nd_loss_train)
-            nd_losses_test.append(nd_loss_test)
+            objective_losses_train.append(objective_loss_train)
+            objective_losses_test.append(objective_loss_test)
+            alpha_losses_train.append(alpha_loss_train)
+            alpha_losses_test.append(alpha_loss_test)
 
             # -- Saves run meta data
-            bce_curr_train, alpha_curr_train, nd_curr_train = self.evaluate(model, dataset="train")
-            bce_curr_test, alpha_curr_test, nd_curr_test = self.evaluate(model, dataset="test")
             run_records = self._params
             local_params = {
                 'fairness_weight': fairness_weight
             }
             run_records.update(local_params)
             results_dict = {
-                'train_loss': float(bce_curr_train),
-                'alpha_train_loss': float(alpha_curr_train),
-                'nd_train_loss': float(nd_curr_train),
-                'test_loss': float(bce_curr_test),
-                'alpha_test_loss': float(alpha_curr_test),
-                'nd_test_loss': float(nd_curr_test),
-                # 'bottleneck_train': curr_bottleneck_train,
-                # 'bottleneck_test': curr_bottleneck_test,
+                'objective_loss_train': float(objective_loss_train),
+                'alpha_loss_train_00': float(alpha_loss_train[0]),
+                'alpha_loss_train_01': float(alpha_loss_train[1]),
+                'alpha_loss_train_10': float(alpha_loss_train[2]),
+                'alpha_loss_train_11': float(alpha_loss_train[3]),
+                'objective_loss_test': float(objective_loss_test),
+                'alpha_loss_test_00': float(alpha_loss_test[0]),
+                'alpha_loss_test_01': float(alpha_loss_test[1]),
+                'alpha_loss_test_10': float(alpha_loss_test[2]),
+                'alpha_loss_test_11': float(alpha_loss_test[3])
             }
             run_records.update(results_dict)
             filename = f'records/run_{datetime.now().timestamp()}.json'
             with open(filename, 'w') as file:
                 json.dump(run_records, file)
 
-        objective_losses_train, objective_losses_test, nd_losses_train, nd_losses_test = np.array(
-            objective_losses_train), np.array(objective_losses_test), np.array(nd_losses_train), np.array(
-            nd_losses_test)
+        objective_losses_train, objective_losses_test, alpha_losses_train, alpha_losses_test = np.array(
+            objective_losses_train), np.array(objective_losses_test), np.array(alpha_losses_train), np.array(
+            alpha_losses_test)
 
         num_categories = len(categories)
         plot_dim_1, plot_dim_2 = find_optimal_subplot_dims(num_categories)
@@ -171,9 +172,9 @@ class FairnessAwareLearningExperiment:
 
         for i in range(num_categories):
             idx, idy = i // plot_dim_2, i % plot_dim_2
-            scatter_train = axes[idx, idy].scatter(nd_losses_train[:, i], objective_losses_train,
+            scatter_train = axes[idx, idy].scatter(alpha_losses_train[:, i], objective_losses_train,
                                                    c=[l[i] for l in bottlenecks_train], label='train')
-            scatter_test = axes[idx, idy].scatter(nd_losses_test[:, i], objective_losses_test,
+            scatter_test = axes[idx, idy].scatter(alpha_losses_test[:, i], objective_losses_test,
                                                   c=[l[i] for l in bottlenecks_test], label='test')
             axes[idx, idy].legend(handles=[scatter_train, scatter_test])
             axes[idx, idy].set_xlabel('Discrimimnatory loss')
@@ -191,5 +192,5 @@ class FairnessAwareLearningExperiment:
         plt.savefig(f'./plots/analysis_{self.fairness_name}.pdf')
 
         return ExperimentResults(self.y_train, self.a_train, self.y_test, self.a_test, categories,
-                                 objective_losses_train, nd_losses_train, bottlenecks_train, objective_losses_test,
-                                 nd_losses_test, bottlenecks_test, self.fairness_name, self.dataset_name)
+                                 objective_losses_train, alpha_losses_train, bottlenecks_train, objective_losses_test,
+                                 alpha_losses_test, bottlenecks_test, self.fairness_name, self.dataset_name)

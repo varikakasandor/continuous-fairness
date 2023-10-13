@@ -115,8 +115,8 @@ if __name__ == "__main__":
     np.random.seed(RANDOM_SEED)
 
     dataset_name = "synthetic"
-    real_run = True
-    single_run = False
+    real_run = False
+    single_run = True
     load_existing_result = False
     use_multiprocessing = False
 

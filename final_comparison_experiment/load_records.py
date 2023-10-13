@@ -3,7 +3,8 @@ import pandas as pd
 import pathlib
 
 if __name__ == '__main__':
-    path = pathlib.Path('records/')
+    pathname = 'records/'
+    path = pathlib.Path(pathname)
 
     all_record = []
     for filename in path.glob('*.json'):
@@ -19,4 +20,4 @@ if __name__ == '__main__':
         all_record.append(record)
 
     df = pd.DataFrame(all_record)
-    df.to_csv('records.csv', index=False)
+    df.to_csv(f'{pathname}/records.csv', index=False)
