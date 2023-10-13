@@ -78,13 +78,13 @@ def create_comparison(alpha_results, beta_results, experiment_name):
                                                     label='beta_train', marker='x')
         scatter_alpha_train = axes[idx, idy].scatter(alpha_results.nd_loss_train[:, i],
                                                      alpha_results.obj_loss_train,
-                                                     c='blue', linewidth = [l[i] for l in alpha_results.bottlenecks_train],
+                                                     c='green', linewidth = [l[i] for l in alpha_results.bottlenecks_train],
                                                      label='alpha_train', marker='v')
         scatter_beta_test = axes[idx, idy].scatter(beta_results.nd_loss_test[:, i], beta_results.obj_loss_test,
-                                                   c=[l[i] for l in beta_results.bottlenecks_test],
+                                                   c='blue', linewidth=[l[i] for l in beta_results.bottlenecks_test],
                                                    label='beta_test', marker='x')
         scatter_alpha_test = axes[idx, idy].scatter(alpha_results.nd_loss_test[:, i], alpha_results.obj_loss_test,
-                                                    c=[l[i] for l in alpha_results.bottlenecks_test],
+                                                    c='blue', linewidth=[l[i] for l in alpha_results.bottlenecks_test],
                                                     label='alpha_test', marker='v')
         axes[idx, idy].legend(
             handles=[scatter_beta_train, scatter_alpha_train, scatter_beta_test, scatter_alpha_test])
