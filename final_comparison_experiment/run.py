@@ -114,7 +114,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = True
+    single_run = False
     load_existing_result = False
     use_multiprocessing = False
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
                                                               20 if real_run else 2,
                                                               1e-4, eta=0.4, gamma_0=0.2, gamma_1=0.1,
                                                               information_0=0.2, information_1=0.02,
-                                                              feature_size_0=10, feature_size_1=62,
+                                                              feature_size_0=10, feature_size_1=242,
                                                               train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
         else:
             default_params = {
