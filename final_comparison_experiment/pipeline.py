@@ -189,7 +189,6 @@ class FairnessAwareLearningExperiment:
         fig.suptitle(self.fairness_name)
         plt.tight_layout()
         plt.savefig(f'./plots/analysis_{self.fairness_name}.pdf')
-        plt.show()
 
         return ExperimentResults(self.y_train, self.a_train, self.y_test, self.a_test, categories,
                                  objective_losses_train, nd_losses_train, bottlenecks_train, objective_losses_test,
