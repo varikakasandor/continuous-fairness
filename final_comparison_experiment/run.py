@@ -119,8 +119,8 @@ if __name__ == "__main__":
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 250 if real_run else 2,
-                                                              10 if real_run else 2,
+            alpha_results, beta_results = running_experiments(dataset_name, 100 if real_run else 2,
+                                                              20 if real_run else 2,
                                                               1e-4, eta=0.4, gamma_0=0.2, gamma_1=0.1,
                                                               information_0=0.2,
                                                               information_1=0.02, train_size=6000, test_size=6000)
