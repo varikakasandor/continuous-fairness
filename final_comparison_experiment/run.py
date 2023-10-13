@@ -74,11 +74,11 @@ def create_comparison(alpha_results, beta_results, experiment_name):
     for i in range(num_categories):
         idx, idy = i // plot_dim_2, i % plot_dim_2
         scatter_beta_train = axes[idx, idy].scatter(beta_results.nd_loss_train[:, i], beta_results.obj_loss_train,
-                                                    c=[l[i] for l in beta_results.bottlenecks_train],
+                                                    c='green', linewidth = [l[i] for l in beta_results.bottlenecks_train],
                                                     label='beta_train', marker='x')
         scatter_alpha_train = axes[idx, idy].scatter(alpha_results.nd_loss_train[:, i],
                                                      alpha_results.obj_loss_train,
-                                                     c=[l[i] for l in alpha_results.bottlenecks_train],
+                                                     c='blue', linewidth = [l[i] for l in alpha_results.bottlenecks_train],
                                                      label='alpha_train', marker='v')
         scatter_beta_test = axes[idx, idy].scatter(beta_results.nd_loss_test[:, i], beta_results.obj_loss_test,
                                                    c=[l[i] for l in beta_results.bottlenecks_test],
@@ -113,7 +113,7 @@ def wrapped_exp(params):
 
 if __name__ == "__main__":
     dataset_name = "synthetic"
-    real_run = True
+    real_run = False
     single_run = True
     load_existing_result = False
     use_multiprocessing = False
@@ -127,10 +127,10 @@ if __name__ == "__main__":
             #                                                  feature_size_0=5, feature_size_1=242,
             #                                                  train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
             alpha_results, beta_results = running_experiments(dataset_name, 100 if real_run else 2,
-                                                                20 if real_run else 2,
-                                                                1e-4, eta=0.4, gamma_0=0.5, gamma_1=0.1,
-                                                                information_0=0.2, information_1=0.1,
-                                                                feature_size_0=5, feature_size_1=242,
+                                                                20 if real_run else 5,
+                                                                1e-4, eta=0.4 if real_run else 0.5, gamma_0=0.5, gamma_1=0.1 if real_run else 0.5,
+                                                                information_0=0.2, information_1=0.1 if real_run else 0.2,
+                                                                feature_size_0=5, feature_size_1=242 if real_run else 5,
                                                                 train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
 
         else:

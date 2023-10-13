@@ -101,7 +101,7 @@ class FairnessAwareLearningExperiment:
 
     def evaluate(self, model, dataset="test"):
         x, a, y = (self.x_train, self.a_train, self.y_train) if dataset == "train" else (
-        self.x_test, self.a_test, self.y_test)
+            self.x_test, self.a_test, self.y_test)
         prediction = model(x).detach().flatten()
         loss = nn.BCELoss()(prediction, y)
         fairness_losses = self.fairness_metric(prediction, a, y)
@@ -122,16 +122,17 @@ class FairnessAwareLearningExperiment:
 
             prediction_train, prediction_test = model(self.x_train).detach().flatten(), model(
                 self.x_test).detach().flatten()
-            objective_loss_train, objective_loss_test = nn.BCELoss()(prediction_train, self.y_train), nn.BCELoss()(prediction_test,
-                                                                                               self.y_test)
+            objective_loss_train, objective_loss_test = nn.BCELoss()(prediction_train, self.y_train), nn.BCELoss()(
+                prediction_test,
+                self.y_test)
             alpha_loss_train, categories_train = self.analysis_metric(prediction_train, self.a_train,
-                                                                   self.y_train)  # categories is the same for all iterations, should be restructured
+                                                                      self.y_train)  # categories is the same for all iterations, should be restructured
             alpha_loss_test, categories_test = self.analysis_metric(prediction_test, self.a_test, self.y_test)
             assert categories_train == categories_test
             categories = categories_train
-            curr_bottleneck_train, curr_bottleneck_test = ["green"] * len(alpha_loss_train), ["blue"] * len(alpha_loss_test)
+            curr_bottleneck_train, curr_bottleneck_test = [1] * len(alpha_loss_train), [1] * len(alpha_loss_test)
             curr_bottleneck_train[alpha_loss_train.index(max(alpha_loss_train))], curr_bottleneck_test[
-                alpha_loss_test.index(max(alpha_loss_test))] = "red", "orange"
+                alpha_loss_test.index(max(alpha_loss_test))] = MARKER_STRONG_WIDTH, MARKER_STRONG_WIDTH
             bottlenecks_train.append(curr_bottleneck_train)
             bottlenecks_test.append(curr_bottleneck_test)
             objective_losses_train.append(objective_loss_train)
@@ -173,17 +174,18 @@ class FairnessAwareLearningExperiment:
         for i in range(num_categories):
             idx, idy = i // plot_dim_2, i % plot_dim_2
             scatter_train = axes[idx, idy].scatter(alpha_losses_train[:, i], objective_losses_train,
-                                                   c=[l[i] for l in bottlenecks_train], label='train')
+                                                   c='green', linewidths=[l[i] for l in bottlenecks_train],
+                                                   label='train')
             scatter_test = axes[idx, idy].scatter(alpha_losses_test[:, i], objective_losses_test,
-                                                  c=[l[i] for l in bottlenecks_test], label='test')
+                                                  c='blue', linewidths=[l[i] for l in bottlenecks_test], label='test')
             axes[idx, idy].legend(handles=[scatter_train, scatter_test])
             axes[idx, idy].set_xlabel('Discrimimnatory loss')
             axes[idx, idy].set_ylabel('Objective loss')
             (Y_start, Y_end), (A_start, A_end) = categories[i]
             category_prob_train = ((Y_start < self.y_train) & (self.y_train <= Y_end) & (A_start < self.a_train) & (
-                        self.a_train <= A_end)).sum() / len(self.y_train)
+                    self.a_train <= A_end)).sum() / len(self.y_train)
             category_prob_test = ((Y_start < self.y_test) & (self.y_test <= Y_end) & (A_start < self.a_test) & (
-                        self.a_test <= A_end)).sum() / len(self.y_test)
+                    self.a_test <= A_end)).sum() / len(self.y_test)
             category_desc = f"Y: ({Y_start:.3f} - {Y_end:.3f}), A: ({A_start:.3f} - {A_end:.3f}), P_ya_train: {category_prob_train:.3f}, P_ya_test: {category_prob_test:.3f}"
             axes[idx, idy].set_title(category_desc, fontsize="xx-small")
 

@@ -16,3 +16,4 @@ def find_optimal_subplot_dims(num_plots):
 
 
 RANDOM_SEED = 42
+MARKER_STRONG_WIDTH = 4
