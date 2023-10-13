@@ -44,7 +44,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     if dataset_name == 'synthetic':
         config_str += f'_{"_".join([f"{k}-{v}" for k, v in kwargs.items()])}'
 
-    fairness_weights_beta = np.logspace(np.log10(0.1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
+    fairness_weights_beta = np.logspace(np.log10(1), np.log10(25), num_fairness_weights)  # TODO: set it based on eta
     fairness_name = "Beta"
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, f'{fairness_name}_{config_str}',
                                                       dataset_name,
@@ -53,7 +53,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     beta_results = beta_experiment.run_analysis()
     joblib.dump(beta_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
 
-    fairness_weights_alpha = np.logspace(np.log10(0.02), np.log10(6), num_fairness_weights)
+    fairness_weights_alpha = np.logspace(np.log10(0.2), np.log10(6), num_fairness_weights)
     fairness_name = "Alpha"
     alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, f'{fairness_name}_{config_str}',
                                                        dataset_name,
@@ -114,7 +114,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = False
+    single_run = True
     load_existing_result = False
     use_multiprocessing = False
 
