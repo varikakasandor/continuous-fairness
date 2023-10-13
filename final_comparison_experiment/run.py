@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     dataset_name = "synthetic"
     real_run = True
-    single_run = True
+    single_run = False
     load_existing_result = False
     use_multiprocessing = False
 
