@@ -114,7 +114,7 @@ def wrapped_exp(params):
 if __name__ == "__main__":
     dataset_name = "synthetic"
     real_run = True
-    single_run = False
+    single_run = True
     load_existing_result = False
     use_multiprocessing = False
 
@@ -133,6 +133,7 @@ if __name__ == "__main__":
                 'num_fairness_weights': 20,
                 'train_size': 6000,
                 'test_size': 6000,
+                'lr': 1e-4,
                 'eta': 0.4,
                 'gamma_0': 0.2,
                 'gamma_1': 0.1,
@@ -147,6 +148,7 @@ if __name__ == "__main__":
                 'num_fairness_weights': [],
                 'train_size': [],
                 'test_size': [],
+                'lr': [],
                 'eta': [0.1, 0.3, 0.5],
                 'gamma_0': [0.01, 0.1, 0.3, 0.5],
                 'gamma_1': [0.01, 0.1, 0.3, 0.5],
