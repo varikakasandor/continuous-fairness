@@ -30,7 +30,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
 
     if dataset_name == "synthetic":
-        alpha_intervals = generate_constrained_intervals(len(kwargs['etas']))
+        alpha_intervals = generate_constrained_intervals(2)
         y_intervals = generate_constrained_intervals(2)
         beta_metric = generate_beta(alpha_intervals, y_intervals)
         alpha_metric = generate_alpha(alpha_intervals, y_intervals)
@@ -119,11 +119,16 @@ if __name__ == "__main__":
 
     if not load_existing_result:
         if single_run:
-            alpha_results, beta_results = running_experiments(dataset_name, 150 if real_run else 2,
+            alpha_results, beta_results = running_experiments(dataset_name, 100 if real_run else 2,
+                                                              10 if real_run else 2,
+                                                              1e-4, eta=0.4, gamma_0=0.2, gamma_1=0.3,
+                                                              information_0=0.2,
+                                                              information_1=0.02, train_size=6000, test_size=6000)
+            """alpha_results, beta_results = running_experiments(dataset_name, 250 if real_run else 2,
                                                               20 if real_run else 2,
                                                               1e-4, etas=[0.4, 0.6], gammas=[0.2, 0.1],
                                                               informations=[0.2, 0.02], feature_sizes=[16, 8],
-                                                              train_size=4000, test_size=1000)
+                                                              train_size=4000, test_size=1000)"""
             """alpha_results, beta_results = running_experiments(dataset_name, 350 if real_run else 2,
                                                               20 if real_run else 2,
                                                               1e-4, etas=[0.5, 0.5], gammas=[0.1, 0.1],
@@ -134,8 +139,8 @@ if __name__ == "__main__":
                 'dataset_name': dataset_name,
                 'num_epochs': 300,
                 'num_fairness_weights': 20,
-                'train_size': 4000,
-                'test_size': 1000,
+                'train_size': 6000,
+                'test_size': 6000,
             }
             param_combinations = [
                 {**(default_params.copy()), **({'lr': lr, 'etas': etas, 'gammas': gammas, 'informations': informations,

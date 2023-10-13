@@ -42,7 +42,7 @@ CUSTOM_MAX_FUN = CUSTOM_MAX.value
 
 class FairnessAwareLearningExperiment:
     def __init__(self, data, fairness_metric, fairness_name, dataset_name, fairness_weights, analysis_metric, lr,
-                 num_epochs=100, print_progress=True, external_params={}):
+                 num_epochs=100, print_progress=False, external_params={}):
         x_train, y_train, a_train, x_test, y_test, a_test = data
         self.x_train, self.y_train, self.a_train, self.x_test, self.y_test, self.a_test = torch.tensor(
             x_train.astype(np.float32)), torch.tensor(y_train.astype(np.float32)), torch.tensor(
@@ -115,8 +115,7 @@ class FairnessAwareLearningExperiment:
         categories = None
         bottlenecks_train, bottlenecks_test = [], []
         for fairness_weight in self.fairness_weights:
-            if self.print_progress:
-                print(f"Fairness weight {fairness_weight} started")
+            print(f"Fairness weight {fairness_weight} started")
             model = SimpleNN(self.x_train.shape[1], 1)
             self.train_model(model, fairness_weight=fairness_weight)
 
