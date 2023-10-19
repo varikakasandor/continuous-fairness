@@ -113,8 +113,8 @@ def wrapped_exp(params):
 
 if __name__ == "__main__":
     dataset_name = "synthetic"
-    real_run = False
-    single_run = True
+    real_run = True
+    single_run = False
     load_existing_result = False
     use_multiprocessing = False
 
@@ -147,9 +147,10 @@ if __name__ == "__main__":
                 'information_0': 0.2,
                 'information_1': 0.02,
                 'feature_size_0': 10,
-                'feature_size_1': 242
+                'feature_size_1': 242,
+                'seed': RANDOM_SEED
             }
-            alternative_param_options = {
+            """alternative_param_options = {
                 'dataset_name': [],
                 'num_epochs': [],
                 'num_fairness_weights': [],
@@ -163,21 +164,43 @@ if __name__ == "__main__":
                 'information_1': [0.0, 0.1, 0.5, 1],
                 'feature_size_0': [2, 5, 50],
                 'feature_size_1': [5, 30, 60, 100, 300]
+            }"""
+            alternative_param_options = {
+                'dataset_name': [],
+                'num_epochs': [],
+                'num_fairness_weights': [],
+                'train_size': [],
+                'test_size': [],
+                'lr': [],
+                'eta': [0.5],
+                'gamma_0': [0.5],
+                'gamma_1': [0.01],
+                'information_0': [],
+                'information_1': [0.1, 0.5, 1],
+                'feature_size_0': [5],
+                'feature_size_1': [300]
             }
-            param_combinations = [default_params]
+            param_combinations_same_seed = [default_params]
             for (param, options) in alternative_param_options.items():
                 for new_val in options:
                     curr_param_combination = copy.deepcopy(default_params)
                     curr_param_combination[param] = new_val
-                    param_combinations.append(curr_param_combination)
+                    param_combinations_same_seed.append(curr_param_combination)
+
+            param_combinations = []
+            for params in param_combinations_same_seed:
+                for seed in [1, 2, 3, 4, 5, 6, 7, 8, RANDOM_SEED]:
+                    curr_params = copy.deepcopy(params)
+                    curr_params['seed'] = seed
+                    param_combinations.append(curr_params)
 
             if use_multiprocessing:
                 num_processes = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=num_processes)
-                pool.map(wrapped_exp, param_combinations)
+                pool.map(wrapped_exp, param_combinations_same_seed)
                 pool.close()
                 pool.join()
-            list(map(wrapped_exp, param_combinations))
+            list(map(wrapped_exp, param_combinations_same_seed))
 
 
     else:

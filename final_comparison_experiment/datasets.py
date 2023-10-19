@@ -176,7 +176,6 @@ def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size
     gamma_1: P(Y=1|A)
     """
     assert abs(sum(etas) - 1.0) < 0.001
-    np.random.seed(RANDOM_SEED)
     size = train_size + test_size
     num_categories = len(etas)
     A = np.random.choice(np.arange(num_categories), size=size, replace=True, p=etas)
@@ -192,12 +191,13 @@ def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
 
 
-def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, feature_size_0, feature_size_1, train_size, test_size):
+def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, feature_size_0, feature_size_1, train_size, test_size, seed=RANDOM_SEED):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)
     gamma_1: P(Y=1|A)
     """
+    np.random.seed(seed)
     size = train_size + test_size
     A = np.random.choice([0,1], size=size, replace=True, p=[1-eta, eta]) # generates the A values
     Y_0 = np.random.choice([0,1], size=size, replace=True, p=[1-gamma_0, gamma_0]) # generates Y values given A=0
