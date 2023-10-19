@@ -64,19 +64,22 @@ def create_plots_from_csvs():
         data = pd.read_csv(csv_file)
         alpha_kappas, beta_kappas = [], []
         alpha_objectives, beta_objectives = [], []
-        alpha_nd_losses_00, beta_nd_losses_00 = [], []
+        alpha_nd_losses_00, alpha_nd_losses_01, beta_nd_losses_00, beta_nd_losses_01 = [], [], [], []
         for index, row in data.iterrows():
             kappa = max([row['alpha_loss_test_00'], row['alpha_loss_test_01'], row['alpha_loss_test_10'], row['alpha_loss_test_11']])
             objective = row['objective_loss_test']
-            nd_loss = row['alpha_loss_test_00']
+            nd_loss_00, nd_loss_01 = row['alpha_loss_test_00'], row['alpha_loss_test_01']
             if row['fairness_name'] == 'Alpha':
                 alpha_kappas.append(kappa)
                 alpha_objectives.append(objective)
-                alpha_nd_losses_00.append(nd_loss)
+                alpha_nd_losses_00.append(nd_loss_00)
+                alpha_nd_losses_01.append(nd_loss_01)
             else:
                 beta_kappas.append(kappa)
                 beta_objectives.append(objective)
-                beta_nd_losses_00.append(nd_loss)
+                beta_nd_losses_00.append(nd_loss_00)
+                beta_nd_losses_01.append(nd_loss_01)
+
         plt.scatter(alpha_kappas, alpha_objectives, c='blue',label='alpha', marker='v')
         plt.scatter(beta_kappas, beta_objectives, c='blue',label='beta', marker='x')
         plt.xlabel("kappa")
@@ -88,6 +91,7 @@ def create_plots_from_csvs():
         plt.title(title)
         plt.savefig(f'./plots/{csv_file.name[5:15]}_what_we_suffer.pdf')
         plt.clf()
+
         plt.scatter(alpha_kappas, alpha_nd_losses_00, c='blue', label='alpha', marker='v')
         plt.scatter(beta_kappas, beta_nd_losses_00, c='blue', label='beta', marker='x')
         plt.xlabel("kappa")
@@ -96,9 +100,22 @@ def create_plots_from_csvs():
         title_topics = ['eta', 'gamma_0', 'gamma_1', 'information_0', 'information_1', 'feature_size_0',
                         'feature_size_1']
         title_values = [str(data[topic][0]) for topic in title_topics]
-        title = '_'.join(title_values) + '_PRO'
+        title = '_'.join(title_values) + '_PRO_00'
         plt.title(title)
-        plt.savefig(f'./plots/{csv_file.name[5:15]}_what_we_gain.pdf')
+        plt.savefig(f'./plots/{csv_file.name[5:15]}_what_we_gain_00.pdf')
+        plt.clf()
+
+        plt.scatter(alpha_kappas, alpha_nd_losses_01, c='blue', label='alpha', marker='v')
+        plt.scatter(beta_kappas, beta_nd_losses_01, c='blue', label='beta', marker='x')
+        plt.xlabel("kappa")
+        plt.ylabel("alpha loss on Y=1, A=0")
+        plt.legend()
+        title_topics = ['eta', 'gamma_0', 'gamma_1', 'information_0', 'information_1', 'feature_size_0',
+                        'feature_size_1']
+        title_values = [str(data[topic][0]) for topic in title_topics]
+        title = '_'.join(title_values) + '_PRO_01'
+        plt.title(title)
+        plt.savefig(f'./plots/{csv_file.name[5:15]}_what_we_gain_01.pdf')
         plt.clf()
 
 
