@@ -198,10 +198,10 @@ if __name__ == "__main__":
             if use_multiprocessing:
                 num_processes = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=num_processes)
-                pool.map(wrapped_exp, param_combinations_same_seed)
+                pool.map(wrapped_exp, param_combinations)
                 pool.close()
                 pool.join()
-            list(map(wrapped_exp, param_combinations_same_seed))
+            list(map(wrapped_exp, param_combinations))
 
 
     else:
