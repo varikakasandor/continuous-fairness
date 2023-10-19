@@ -108,6 +108,7 @@ def create_comparison(alpha_results, beta_results, experiment_name):
 
 
 def wrapped_exp(params):
+    print(f"{params} started")
     running_experiments(**params, create_comparison_enabled=True)
 
 
