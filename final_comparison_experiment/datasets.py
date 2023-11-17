@@ -20,7 +20,7 @@ def read_dataset(name, label=None, sensitive_attribute=None, fold=None, **kwargs
         fold_id = fold if fold is not None else 1
         return read_crimes(label=y_name, sensitive_attribute=z_name, fold=fold_id)
     elif name == 'adult':
-        return read_adult()
+        return read_adult(**kwargs)
     elif name == "uscensus":
         return read_uscensus()
     elif name == "synthetic":
@@ -81,7 +81,7 @@ def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack',
 
 
 # This function is a minor modification from https://github.com/jmikko/fair_ERM
-def read_adult(nTrain=None, scaler=True, shuffle=False):
+def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.3, **kwargs):
     if shuffle:
         print('Warning: I wont shuffle because adult has fixed test set')
     '''
@@ -125,6 +125,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
             "occupation", "relationship", "race", "gender", "capital gain", "capital loss",
             "hours per week", "native-country", "income"]
     )
+    data = data.iloc[:int(len(data) * portion_kept)]
     len_train = len(data.values[:, -1])
     data_test = pd.read_csv(
         "./data/adult.test",
@@ -134,6 +135,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
             "hours per week", "native-country", "income"],
         skiprows=1, header=None
     )
+    data_test = data_test.iloc[:int(len(data_test) * portion_kept)]
     data = pd.concat([data, data_test])
     # Considering the relative low portion of missing data, we discard rows with missing data
     domanda = data["workclass"][4].values[1]
@@ -169,7 +171,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False):
                                                                                                       nTrain:]
 
 
-def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size, test_size):
+def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size, test_size, **kwargs):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)
