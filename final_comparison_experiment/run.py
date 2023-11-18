@@ -115,7 +115,7 @@ def wrapped_exp(params):
 
 if __name__ == "__main__":
     dataset_name = "adult"
-    real_run = False
+    real_run = True
     single_run = True
     load_existing_result = False
     use_multiprocessing = False
