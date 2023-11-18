@@ -81,7 +81,7 @@ def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack',
 
 
 # This function is a minor modification from https://github.com/jmikko/fair_ERM
-def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.3, permute_rows=False, **kwargs):
+def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.3, permute_rows=True, **kwargs):
     if shuffle:
         print('Warning: I wont shuffle because adult has fixed test set')
     '''

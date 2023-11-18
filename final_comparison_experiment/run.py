@@ -133,7 +133,7 @@ if __name__ == "__main__":
                                                                 1e-4, eta=0.4 if real_run else 0.5, gamma_0=0.5, gamma_1=0.1 if real_run else 0.5,
                                                                 information_0=0.2, information_1=0.1 if real_run else 0.2,
                                                                 feature_size_0=5, feature_size_1=242 if real_run else 5,
-                                                                train_size=6000, test_size=6000) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
+                                                                train_size=6000, test_size=6000, permute_rows=True) # feature_size_1 should be int(eta * gamma_1 * train_size + 2)
 
         else:
             default_params = {
