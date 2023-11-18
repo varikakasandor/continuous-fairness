@@ -81,7 +81,7 @@ def read_crimes(label='ViolentCrimesPerPop', sensitive_attribute='racepctblack',
 
 
 # This function is a minor modification from https://github.com/jmikko/fair_ERM
-def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.3, **kwargs):
+def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.03, permute_rows=False, **kwargs):
     if shuffle:
         print('Warning: I wont shuffle because adult has fixed test set')
     '''
@@ -137,8 +137,10 @@ def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.3, **kwar
     )
     data_test = data_test.iloc[:int(len(data_test) * portion_kept)]
     data = pd.concat([data, data_test])
+    if permute_rows:
+        data = data.sample(frac=1).reset_index(drop=True)
     # Considering the relative low portion of missing data, we discard rows with missing data
-    domanda = data["workclass"][4].values[1]
+    domanda = " ?" # data.loc[4, "workclass"].values[1]
     data = data[data["workclass"] != domanda]
     data = data[data["occupation"] != domanda]
     data = data[data["native-country"] != domanda]
