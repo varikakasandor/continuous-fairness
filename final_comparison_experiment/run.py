@@ -114,7 +114,7 @@ def wrapped_exp(params):
 
 
 if __name__ == "__main__":
-    dataset_name = "adult"
+    dataset_name = "uscensus"
     real_run = True
     single_run = True
     load_existing_result = False
