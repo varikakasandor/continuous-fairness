@@ -7,7 +7,7 @@ import pathlib
 import copy
 
 from datasets import read_dataset
-from fairness_metrics import generate_beta, generate_alpha, generate_constrained_intervals
+from fairness_metrics import *
 from pipeline import FairnessAwareLearningExperiment
 from tools import *
 
@@ -38,6 +38,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
 
     dataset = read_dataset(dataset_name, **kwargs)
     analysis_metric = generate_alpha(alpha_intervals, y_intervals, return_category_names=True)
+    per_category_loss_fn = generate_per_category_losses(alpha_intervals, y_intervals, return_category_names=False)
 
     timestamp = datetime.now().timestamp()
     config_str = f"{dataset_name}_{num_epochs}_{lr}_{num_fairness_weights}_{timestamp}"
@@ -49,7 +50,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     beta_experiment = FairnessAwareLearningExperiment(dataset, beta_metric, f'{fairness_name}_{config_str}',
                                                       dataset_name,
                                                       fairness_weights_beta,
-                                                      analysis_metric, lr, num_epochs, external_params=kwargs)
+                                                      analysis_metric, per_category_loss_fn, lr, num_epochs, external_params=kwargs)
     beta_results = beta_experiment.run_analysis()
     joblib.dump(beta_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
 
@@ -57,7 +58,7 @@ def running_experiments(dataset_name, num_epochs, num_fairness_weights, lr, crea
     fairness_name = "Alpha"
     alpha_experiment = FairnessAwareLearningExperiment(dataset, alpha_metric, f'{fairness_name}_{config_str}',
                                                        dataset_name,
-                                                       fairness_weights_alpha, analysis_metric, lr, num_epochs,
+                                                       fairness_weights_alpha, analysis_metric, per_category_loss_fn, lr, num_epochs,
                                                        external_params=kwargs)
     alpha_results = alpha_experiment.run_analysis()
     joblib.dump(alpha_results, f'results/analysis_{fairness_name}_{config_str}.joblib')
@@ -73,23 +74,23 @@ def create_comparison(alpha_results, beta_results, experiment_name):
 
     for i in range(num_categories):
         idx, idy = i // plot_dim_2, i % plot_dim_2
-        scatter_beta_train = axes[idx, idy].scatter(beta_results.nd_loss_train[:, i], beta_results.obj_loss_train,
+        scatter_beta_train = axes[idx, idy].scatter(beta_results.per_category_loss_train[:, i], beta_results.obj_loss_train,
                                                     c='green', linewidth = [l[i] for l in beta_results.bottlenecks_train],
                                                     label='beta_train', marker='x')
-        scatter_alpha_train = axes[idx, idy].scatter(alpha_results.nd_loss_train[:, i],
+        scatter_alpha_train = axes[idx, idy].scatter(alpha_results.per_category_loss_train[:, i],
                                                      alpha_results.obj_loss_train,
                                                      c='green', linewidth = [l[i] for l in alpha_results.bottlenecks_train],
                                                      label='alpha_train', marker='v')
-        scatter_beta_test = axes[idx, idy].scatter(beta_results.nd_loss_test[:, i], beta_results.obj_loss_test,
+        scatter_beta_test = axes[idx, idy].scatter(beta_results.per_category_loss_test[:, i], beta_results.obj_loss_test,
                                                    c='blue', linewidth=[l[i] for l in beta_results.bottlenecks_test],
                                                    label='beta_test', marker='x')
-        scatter_alpha_test = axes[idx, idy].scatter(alpha_results.nd_loss_test[:, i], alpha_results.obj_loss_test,
+        scatter_alpha_test = axes[idx, idy].scatter(alpha_results.per_category_loss_test[:, i], alpha_results.obj_loss_test,
                                                     c='blue', linewidth=[l[i] for l in alpha_results.bottlenecks_test],
                                                     label='alpha_test', marker='v')
         axes[idx, idy].legend(
             handles=[scatter_beta_train, scatter_alpha_train, scatter_beta_test, scatter_alpha_test])
-        axes[idx, idy].set_xlabel('Discrimimnatory loss')
-        axes[idx, idy].set_ylabel('Objective loss')
+        axes[idx, idy].set_xlabel('Per category objective loss')
+        axes[idx, idy].set_ylabel('Overall objective loss')
         (Y_start, Y_end), (A_start, A_end) = beta_results.categories[i]
         category_prob_train = ((Y_start < beta_results.y_train) & (beta_results.y_train <= Y_end) & (
                 A_start < beta_results.a_train) & (
@@ -114,7 +115,7 @@ def wrapped_exp(params):
 
 if __name__ == "__main__":
     dataset_name = "adult"
-    real_run = True
+    real_run = False
     single_run = True
     load_existing_result = False
     use_multiprocessing = False

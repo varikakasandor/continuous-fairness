@@ -3,8 +3,8 @@ from collections import namedtuple
 import numpy as np
 
 ExperimentResults = namedtuple('ExperimentResults',
-                         ['y_train', 'a_train', 'y_test', 'a_test', 'categories', 'obj_loss_train', 'nd_loss_train',
-                          'bottlenecks_train', 'obj_loss_test', 'nd_loss_test', 'bottlenecks_test', 'fairness_name', 'dataset_name'])
+                         ['y_train', 'a_train', 'y_test', 'a_test', 'categories', 'obj_loss_train', 'nd_loss_train', 'per_category_loss_train',
+                          'bottlenecks_train', 'obj_loss_test', 'nd_loss_test', 'per_category_loss_test', 'bottlenecks_test', 'fairness_name', 'dataset_name'])
 
 
 def find_optimal_subplot_dims(num_plots):

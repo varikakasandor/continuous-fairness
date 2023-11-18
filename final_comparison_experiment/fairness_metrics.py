@@ -1,8 +1,31 @@
 import torch
 import numpy as np
+from torch import nn
 
 
-def generate_alpha(constrained_intervals_A, quantizition_intervals_Y, return_category_names = False):
+def generate_per_category_losses(constrained_intervals_A, quantizition_intervals_Y, return_category_names=False):
+    def per_category_losses(Y_hat, A, Y):
+        losses = []
+        categories = []
+        for Y_start, Y_end in quantizition_intervals_Y:
+            for A_start, A_end in constrained_intervals_A:
+                y_a_mask = (((Y_start < Y) & (Y <= Y_end)) & (A_start < A) & (A <= A_end))  # always < first <= later!
+                if y_a_mask.any():
+                    masked_prediction = Y_hat[y_a_mask]
+                    masked_target = Y[y_a_mask]
+                    curr_obj_loss = nn.BCELoss()(masked_prediction, masked_target)
+                    losses.append(curr_obj_loss)
+                    if return_category_names:
+                        categories.append(((Y_start, Y_end), (A_start, A_end)))
+        if return_category_names:
+            return losses, categories
+        else:
+            return torch.stack(losses)
+
+    return per_category_losses
+
+
+def generate_alpha(constrained_intervals_A, quantizition_intervals_Y, return_category_names=False):
     def fairness_metric(Y_hat, A, Y):
         nd_losses = []
         categories = []
@@ -10,7 +33,7 @@ def generate_alpha(constrained_intervals_A, quantizition_intervals_Y, return_cat
             y_mask = ((Y_start < Y) & (Y <= Y_end))
             cnt_y = y_mask.sum()
             for A_start, A_end in constrained_intervals_A:
-                y_a_mask = (y_mask & (A_start < A) & (A <= A_end)) # always < first <= later!
+                y_a_mask = (y_mask & (A_start < A) & (A <= A_end))  # always < first <= later!
                 cnt_y_a = y_a_mask.sum()
                 sum_y_yhat = (y_mask * Y_hat).sum()
                 sum_y_a_yhat = (y_a_mask * Y_hat).sum()
