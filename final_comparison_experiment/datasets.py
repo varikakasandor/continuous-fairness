@@ -8,12 +8,16 @@ from folktables import ACSDataSource, ACSEmployment
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from tools import RANDOM_SEED
+from tools import RANDOM_SEED, synchronise_ya_in_dataset
 
 dirname = os.path.dirname(__file__)
 
 
 def read_dataset(name, label=None, sensitive_attribute=None, fold=None, **kwargs):
+    return synchronise_ya_in_dataset(*read_dataset_(name, label, sensitive_attribute, fold, **kwargs))
+
+
+def read_dataset_(name, label=None, sensitive_attribute=None, fold=None, **kwargs):
     if name == 'crimes':
         y_name = label if label is not None else 'ViolentCrimesPerPop'
         z_name = sensitive_attribute if sensitive_attribute is not None else 'racepctblack'
@@ -22,17 +26,20 @@ def read_dataset(name, label=None, sensitive_attribute=None, fold=None, **kwargs
     elif name == 'adult':
         return read_adult(**kwargs)
     elif name == "uscensus":
-        return read_uscensus()
+        return read_uscensus(**kwargs)
     elif name == "synthetic":
         return read_synthetic(**kwargs)
     else:
         raise NotImplemented('Dataset {} does not exists'.format(name))
 
 
-def read_uscensus():
+def read_uscensus(portion_kept=1.0, **kwargs):
     data_source = ACSDataSource(survey_year='2018', horizon='1-Year', survey='person')
     acs_data = data_source.get_data(states=["AL"], download=True)
     features, label, group = ACSEmployment.df_to_numpy(acs_data)
+    features, label, group = features[:int(len(features) * portion_kept)], label[
+                                                                           :int(len(label) * portion_kept)], group[:int(
+        len(group) * portion_kept)]
     group = group.astype(float)
     group /= np.max(group)
     x_train, x_test, y_train, y_test, a_train, a_test = train_test_split(features, label, group, test_size=0.2)
@@ -140,7 +147,7 @@ def read_adult(nTrain=None, scaler=True, shuffle=False, portion_kept=0.3, permut
     if permute_rows:
         data = data.sample(frac=1).reset_index(drop=True)
     # Considering the relative low portion of missing data, we discard rows with missing data
-    domanda = " ?" # data.loc[4, "workclass"].values[1]
+    domanda = " ?"  # data.loc[4, "workclass"].values[1]
     data = data[data["workclass"] != domanda]
     data = data[data["occupation"] != domanda]
     data = data[data["native-country"] != domanda]
@@ -195,7 +202,8 @@ def read_synthetic_general(etas, gammas, informations, feature_sizes, train_size
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
 
 
-def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, feature_size_0, feature_size_1, train_size, test_size, seed=RANDOM_SEED):
+def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, feature_size_0, feature_size_1, train_size,
+                   test_size, seed=RANDOM_SEED):
     """
     eta: P(A=1)
     gamma_0: P(Y=1|A=0)
@@ -203,14 +211,15 @@ def read_synthetic(eta, gamma_0, gamma_1, information_0, information_1, feature_
     """
     np.random.seed(seed)
     size = train_size + test_size
-    A = np.random.choice([0,1], size=size, replace=True, p=[1-eta, eta]) # generates the A values
-    Y_0 = np.random.choice([0,1], size=size, replace=True, p=[1-gamma_0, gamma_0]) # generates Y values given A=0
-    Y_1 = np.random.choice([0,1], size=size, replace=True, p=[1-gamma_1, gamma_1]) # generates Y values given A=1
-    Y = np.where(A, Y_1, Y_0) # choose Y_a for every sample
+    A = np.random.choice([0, 1], size=size, replace=True, p=[1 - eta, eta])  # generates the A values
+    Y_0 = np.random.choice([0, 1], size=size, replace=True, p=[1 - gamma_0, gamma_0])  # generates Y values given A=0
+    Y_1 = np.random.choice([0, 1], size=size, replace=True, p=[1 - gamma_1, gamma_1])  # generates Y values given A=1
+    Y = np.where(A, Y_1, Y_0)  # choose Y_a for every sample
 
     X_0 = np.where(A, 0, 2 * Y_0 - 1)
     X_1 = np.where(A, 2 * Y_1 - 1, -1)
-    X = np.stack([A, A] + [information_0 * X_0 - 1 + 2 * np.random.rand(*X_0.shape) for _ in range(feature_size_0)] + [information_1 * X_1 - 1 + 2 * np.random.rand(*X_1.shape) for
-                                                                                                 _ in range(feature_size_1)], axis=-1)
+    X = np.stack([A, A] + [information_0 * X_0 - 1 + 2 * np.random.rand(*X_0.shape) for _ in range(feature_size_0)] + [
+        information_1 * X_1 - 1 + 2 * np.random.rand(*X_1.shape) for
+        _ in range(feature_size_1)], axis=-1)
     # A[0] = A[-1] = Y[0] = Y[-1] = 1
     return X[:train_size], Y[:train_size], A[:train_size], X[train_size:], Y[train_size:], A[train_size:]
